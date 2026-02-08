@@ -66,6 +66,11 @@ const FeaturesSection = () => {
 
   return (
     <section id="features" className="py-24 relative">
+      {/* Decorative glass orbs for depth */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <div className="absolute top-20 right-10 w-64 h-64 rounded-full bg-primary/10 blur-3xl animate-float" />
+        <div className="absolute bottom-20 left-10 w-80 h-80 rounded-full bg-purple-500/10 blur-3xl animate-float-delayed" />
+      </div>
       {/* Subtle background */}
       <div className="absolute inset-0 bg-muted/30 -z-10" />
 
@@ -105,7 +110,7 @@ const FeaturesSection = () => {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="group"
               >
-                <div className={`relative h-full bg-card rounded-2xl border p-7 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${feature.border}`}>
+                <div className={`relative h-full glass-card hover:scale-[1.02] ${feature.border}`}>
                   <div className={`h-12 w-12 rounded-xl ${feature.bg} flex items-center justify-center mb-5`}>
                     <Icon className={`h-6 w-6 ${feature.color}`} />
                   </div>

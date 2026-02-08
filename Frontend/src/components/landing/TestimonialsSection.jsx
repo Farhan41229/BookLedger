@@ -37,6 +37,11 @@ const TestimonialsSection = () => {
 
   return (
     <section id="testimonials" className="py-24 relative">
+      {/* Decorative glass orbs for depth */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/8 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/8 rounded-full blur-3xl" />
+      </div>
       <div className="absolute inset-0 bg-muted/30 -z-10" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -71,7 +76,7 @@ const TestimonialsSection = () => {
               animate={inView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: index * 0.15 }}
             >
-              <div className="relative h-full bg-card rounded-2xl border p-7 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+              <div className="relative h-full glass-card group">
                 {/* Quote Icon */}
                 <Quote className="h-8 w-8 text-primary/15 mb-4" />
 
