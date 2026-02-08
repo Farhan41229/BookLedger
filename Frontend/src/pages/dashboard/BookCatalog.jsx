@@ -26,7 +26,7 @@ const BookCatalog = () => {
   // Form State for Add/Edit
   const initialFormState = {
     title: "", author: "", isbn: "", genre: "",
-    price: "", stock: "", reorderLevel: "5", supplier: ""
+    price: "", stockQuantity: "", reorderLevel: "5", supplier: ""
   };
   const [formData, setFormData] = useState(initialFormState);
   const [editingId, setEditingId] = useState(null);
@@ -88,7 +88,7 @@ const BookCatalog = () => {
   const openEdit = (book) => {
     setFormData({
       title: book.title, author: book.author, isbn: book.isbn,
-      genre: book.genre, price: book.price, stock: book.stock,
+      genre: book.genre, price: book.price, stockQuantity: book.stockQuantity,
       reorderLevel: book.reorderLevel, supplier: book.supplier || ""
     });
     setEditingId(book._id);
