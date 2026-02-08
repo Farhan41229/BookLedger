@@ -1,7 +1,8 @@
 import { TrendingUp, Users, Package, DollarSign } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import CountUp from 'react-countup';
+import CountUpModule from 'react-countup';
+const CountUp = CountUpModule.default || CountUpModule;
 
 const stats = [
   {
