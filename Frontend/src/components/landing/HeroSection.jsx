@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, Star, BookOpen, BarChart3, ShoppingCart, Sparkles } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Star, BookOpen, BarChart3, ShoppingCart, Sparkles, Zap, Shield, Cloud } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
@@ -11,6 +11,12 @@ const fadeUp = {
     transition: { duration: 0.6, delay: i * 0.1, ease: [0.25, 0.46, 0.45, 0.94] },
   }),
 };
+
+const featureBadges = [
+  { icon: Zap, label: "Lightning Fast" },
+  { icon: Shield, label: "Bank-Level Security" },
+  { icon: Cloud, label: "Cloud-Based" },
+];
 
 const HeroSection = () => {
   return (
@@ -35,18 +41,40 @@ const HeroSection = () => {
               </Badge>
             </motion.div>
 
-            <motion.h1
-              variants={fadeUp}
-              initial="hidden"
-              animate="visible"
-              custom={1}
-              className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.1] tracking-tight"
+            <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.1] tracking-tight mb-4">
+              {['The', 'Modern', 'Way', 'to', 'Manage', 'Your', 'Bookstore'].map((word, index) => (
+                <motion.span
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: index * 0.1 }}
+                  className={index >= 5 ? 'gradient-text' : ''}
+                >
+                  {word}{' '}
+                </motion.span>
+              ))}
+            </h1>
+
+            {/* Feature Badges */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.6 }}
+              className="flex flex-wrap gap-3 mb-6"
             >
-              The Modern Way
-              <br />
-              to Manage Your{' '}
-              <span className="gradient-text">Bookstore</span>
-            </motion.h1>
+              {featureBadges.map((badge, index) => (
+                <motion.div
+                  key={badge.label}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.8 + index * 0.1 }}
+                  className="glass-card px-4 py-2 flex items-center gap-2"
+                >
+                  <badge.icon className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium mono">{badge.label}</span>
+                </motion.div>
+              ))}
+            </motion.div>
 
             <motion.p
               variants={fadeUp}
@@ -121,7 +149,7 @@ const HeroSection = () => {
             className="relative hidden lg:block"
           >
             {/* Main Dashboard Card */}
-            <div className="relative bg-card rounded-2xl shadow-2xl border p-6 z-10">
+            <div className="relative glass-card z-10">
               {/* Dashboard Header */}
               <div className="flex items-center justify-between pb-5 border-b">
                 <div className="flex items-center gap-3">
@@ -191,7 +219,7 @@ const HeroSection = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 1.2 }}
-              className="absolute -top-4 -right-4 bg-card rounded-xl shadow-lg border p-3 z-20 animate-float"
+              className="absolute -top-4 -right-4 glass-card z-20 animate-float"
             >
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
@@ -209,7 +237,7 @@ const HeroSection = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 1.5 }}
-              className="absolute -bottom-4 -left-4 bg-card rounded-xl shadow-lg border p-3 z-20 animate-float-delayed"
+              className="absolute -bottom-4 -left-4 glass-card z-20 animate-float-delayed"
             >
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
