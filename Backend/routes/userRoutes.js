@@ -7,13 +7,16 @@ import {
   getUserById,
   updateUser,
   deleteUser,
+  forgotPassword, // Added this
+  resetPassword,  // Added this
 } from "../controller/userController.js";
 
 const router = express.Router();
 
 // Public routes
 router.post("/login", loginUser);
-
+router.post("/forgot-password", forgotPassword); // Moved to its own line
+router.post("/reset-password/:token", resetPassword); // Moved to its own line
 // Protected routes
 router.post(
   "/register",

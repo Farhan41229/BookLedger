@@ -37,14 +37,16 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+// --- UPDATED SECTION START ---
     resetPasswordToken: {
       type: String,
       default: null,
     },
-    resetPasswordTokenExpiry: {
+    resetPasswordExpiry: { // <--- FIXED: Removed "Token" from the name to match Controller
       type: Date,
       default: null,
     },
+    // --- UPDATED SECTION END ---
   },
   { timestamps: true },
 );

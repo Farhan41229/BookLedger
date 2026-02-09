@@ -446,3 +446,83 @@ export const resendVerificationCode = async (req, res, next) => {
     next(error);
   }
 };
+
+
+/**
+ * Forgot Password - Send reset email
+ * POST /users/forgot-password
+ */
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Please provide an email" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Generate reset token using your existing service
+    const resetToken = generateResetToken();
+    
+    // Set token and expiry (1 hour)
+    user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    user.resetPasswordExpiry = Date.now() + 60 * 60 * 1000;
+
+    await user.save();
+
+    // Send the email using your Brevo service
+    // Note: In a real app, you'd send the 'resetToken' (unhashed) to the user via URL
+    await sendPasswordResetEmail(user.email, resetToken);
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset email sent successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Reset Password
+ * POST /users/reset-password/:token
+ */
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { password } = req.body;
+    const { token } = req.params;
+
+    // Hash the token from the URL to compare with DB
+    const resetPasswordToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Invalid or expired token" });
+    }
+
+    // Hash new password and clear reset fields
+    user.password = await hashPassword(password);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiry = undefined;
+
+    await user.save();
+
+    // Send success email
+    await sendPasswordResetSuccessEmail(user.email);
+
+    res.status(200).json({
+      success: true,
+      message: "Password reset successful",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
