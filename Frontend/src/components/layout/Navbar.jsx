@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Book, Menu, X } from 'lucide-react';
+import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -70,11 +71,11 @@ const Navbar = () => {
 
             {/* CTA Buttons */}
             <div className="hidden md:flex items-center gap-3">
-              <Button variant="ghost" size="sm">
-                Sign In
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/auth/login">Sign In</Link>
               </Button>
-              <Button size="sm" className="shadow-md shadow-primary/25">
-                Get Started
+              <Button size="sm" className="shadow-md shadow-primary/25" asChild>
+                <Link to="/auth/signup">Get Started</Link>
               </Button>
             </div>
 
@@ -110,11 +111,11 @@ const Navbar = () => {
                 </button>
               ))}
               <div className="flex gap-3 pt-3 border-t mt-3">
-                <Button variant="ghost" size="sm" className="flex-1">
-                  Sign In
+                <Button variant="ghost" size="sm" className="flex-1" asChild>
+                  <Link to="/auth/login">Sign In</Link>
                 </Button>
-                <Button size="sm" className="flex-1 shadow-md shadow-primary/25">
-                  Get Started
+                <Button size="sm" className="flex-1 shadow-md shadow-primary/25" asChild>
+                  <Link to="/auth/signup">Get Started</Link>
                 </Button>
               </div>
             </div>
