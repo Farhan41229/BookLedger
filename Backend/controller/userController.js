@@ -1,6 +1,19 @@
 import { User } from "../models/userModel.js";
-import { hashPassword, generateToken, comparePassword } from "../services/authService.js";
+import {
+  hashPassword,
+  generateToken,
+  comparePassword,
+  generateVerificationCode,
+  generateResetToken,
+} from "../services/authService.js";
 import { createAuditLog } from "../services/auditService.js";
+import {
+  sendVerificationEmail,
+  sendWelcomeEmail,
+  sendPasswordResetEmail,
+  sendPasswordResetSuccessEmail,
+} from "../Brevo/Brevoemail.js";
+import crypto from "crypto";
 
 /**
  * Register a new user (Admin only)
@@ -279,6 +292,155 @@ export const deleteUser = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: "User deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Verify email with verification code
+ * POST /users/verify-email
+ */
+export const verifyEmail = async (req, res, next) => {
+  try {
+    const { email, code } = req.body;
+
+    // Validation
+    if (!email || !code) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email and verification code",
+      });
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if email already verified
+    if (user.isEmailVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already verified",
+      });
+    }
+
+    // Check verification code
+    if (user.verificationCode !== code) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid verification code",
+      });
+    }
+
+    // Check if code expired
+    if (user.verificationCodeExpiry < new Date()) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification code has expired",
+      });
+    }
+
+    // Mark email as verified
+    user.isEmailVerified = true;
+    user.verificationCode = null;
+    user.verificationCodeExpiry = null;
+    await user.save();
+
+    // Send welcome email
+    await sendWelcomeEmail(user.email, user.name);
+
+    // Create audit log
+    await createAuditLog(
+      "User",
+      "Update",
+      user._id,
+      { isEmailVerified: false },
+      { isEmailVerified: true },
+      user._id
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Resend verification code
+ * POST /users/resend-verification-code
+ */
+export const resendVerificationCode = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    // Validation
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide email",
+      });
+    }
+
+    // Find user
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Check if email already verified
+    if (user.isEmailVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already verified",
+      });
+    }
+
+    // Generate new verification code
+    const verificationCode = generateVerificationCode();
+
+    // Update user
+    user.verificationCode = verificationCode;
+    user.verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    await user.save();
+
+    // Send verification email
+    await sendVerificationEmail(user.email, verificationCode);
+
+    // Create audit log
+    await createAuditLog(
+      "User",
+      "Update",
+      user._id,
+      { verificationCode: "resent" },
+      { verificationCode: "resent" },
+      user._id
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Verification code sent successfully",
     });
   } catch (error) {
     next(error);
