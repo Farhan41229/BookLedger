@@ -16,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.13.5",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.9.0",
     "cookie-parser": "^1.4.7",
@@ -26,6 +27,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.1.5",
     "node-cron": "^4.2.1",
-    "nodemailer": "^7.0.13"
+    "nodemailer": "^7.0.13",
+    "sib-api-v3-sdk": "^8.5.0"
   }
 }
