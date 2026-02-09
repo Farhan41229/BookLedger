@@ -23,7 +23,6 @@ export const registerUser = async (req, res, next) => {
   try {
     const { name, email, password, role } = req.body;
 
-    // Validation
     if (!name || !email || !password || !role) {
       return res.status(400).json({
         success: false,
@@ -31,7 +30,6 @@ export const registerUser = async (req, res, next) => {
       });
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -40,7 +38,6 @@ export const registerUser = async (req, res, next) => {
       });
     }
 
-    // Validate role
     const validRoles = ["Admin", "Manager", "Cashier"];
     if (!validRoles.includes(role)) {
       return res.status(400).json({
@@ -49,40 +46,36 @@ export const registerUser = async (req, res, next) => {
       });
     }
 
-    // Hash password
     const hashedPassword = await hashPassword(password);
 
-    // Create user
+    // --- UPDATED: VERIFICATION LOGIC ---
+    const verificationCode = generateVerificationCode();
+
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
       role,
+      isEmailVerified: false, // Account starts as unverified
+      verificationCode,
+      verificationCodeExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h expiry
     });
 
-    // Create audit log
+    await sendVerificationEmail(user.email, verificationCode);
+
     await createAuditLog(
       "User",
       "Insert",
       req.user._id,
       null,
-      {
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      { name: user.name, email: user.email, role: user.role },
       user._id
     );
 
     res.status(201).json({
       success: true,
-      message: "User registered successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      message: "User registered successfully. Please verify your email.",
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
     next(error);
@@ -97,53 +90,44 @@ export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Validation
     if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide email and password",
-      });
+      return res.status(400).json({ success: false, message: "Please provide email and password" });
     }
 
-    // Find user with password field
     const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
-      return res.status(401).json({
+      return res.status(401).json({ success: false, message: "Invalid email or password" });
+    }
+
+    // --- UPDATED: BLOCK LOGIN IF NOT VERIFIED ---
+    if (!user.isEmailVerified) {
+      return res.status(403).json({
         success: false,
-        message: "Invalid email or password",
+        message: "Your account is not verified. Please check your email for the verification code.",
       });
     }
 
-    // Compare password
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
+      return res.status(401).json({ success: false, message: "Invalid email or password" });
     }
 
-    // Generate token
     const token = generateToken(user._id);
 
     res.status(200).json({
       success: true,
       message: "Login successful",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: { id: user._id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
     next(error);
   }
 };
 
+// ... Rest of your functions (getAllUsers, getUserById, updateUser, deleteUser, verifyEmail, resendVerificationCode, forgotPassword, resetPassword) remain the same.
 /**
  * Get all users (Admin only)
  * GET /users
