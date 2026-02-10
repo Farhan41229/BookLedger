@@ -15,7 +15,7 @@ export const sendVerificationEmail = async (email, verificationToken) => {
 
   const emailData = {
     sender: {
-      name: 'Farhan Tahsin Khan',
+      name: 'BookLedger',
       email: 'farhankhan@iut-dhaka.edu',
     },
     to: [
@@ -48,19 +48,9 @@ export const sendWelcomeEmail = async (email, name) => {
   const apiKey = process.env.BREVO_API_KEY;
   const url = 'https://api.brevo.com/v3/smtp/email';
 
-  // Hardcoded company information
-  const companyInfo = {
-    name: 'Synchronous Synapse',
-    address: 'Islamic University of Technology, IUT',
-    city: 'Gazipur',
-    zipCode: '1207',
-    country: 'Bangladesh',
-  };
-
-  // Replace the placeholders in the template with actual values
   const emailData = {
     sender: {
-      name: 'Farhan Tahsin Khan',
+      name: 'BookLedger',
       email: 'farhankhan@iut-dhaka.edu',
     },
     to: [
@@ -68,13 +58,8 @@ export const sendWelcomeEmail = async (email, name) => {
         email: email,
       },
     ],
-    subject: 'Welcome to Our App!',
-    htmlContent: WELCOME_EMAIL_TEMPLATE.replace('{name}', name)
-      .replace('{company_info_name}', companyInfo.name)
-      .replace('{company_info_address}', companyInfo.address)
-      .replace('{company_info_city}', companyInfo.city)
-      .replace('{company_info_zip_code}', companyInfo.zipCode)
-      .replace('{company_info_country}', companyInfo.country),
+    subject: 'Welcome to BookLedger!',
+    htmlContent: WELCOME_EMAIL_TEMPLATE.replace('{name}', name),
   };
 
   try {
@@ -101,7 +86,7 @@ export const sendPasswordResetEmail = async (email, resetURL) => {
 
   const emailData = {
     sender: {
-      name: 'Farhan Tahsin Khan',
+      name: 'BookLedger',
       email: 'farhankhan@iut-dhaka.edu',
     },
     to: [
@@ -137,7 +122,7 @@ export const sendPasswordResetSuccessEmail = async (email) => {
 
   const emailData = {
     sender: {
-      name: 'Farhan Tahsin Khan',
+      name: 'BookLedger',
       email: 'farhankhan@iut-dhaka.edu',
     },
     to: [
