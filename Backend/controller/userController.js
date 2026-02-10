@@ -501,9 +501,12 @@ export const forgotPassword = async (req, res, next) => {
 
     await user.save();
 
+    // Build full reset URL for the email link (frontend reset page)
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetURL = `${frontendUrl}/auth/reset-password/${resetToken}`;
+
     // Send the email using your Brevo service
-    // Note: In a real app, you'd send the 'resetToken' (unhashed) to the user via URL
-    await sendPasswordResetEmail(user.email, resetToken);
+    await sendPasswordResetEmail(user.email, resetURL);
 
     res.status(200).json({
       success: true,
