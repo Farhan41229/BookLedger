@@ -7,12 +7,20 @@ import {
   getUserById,
   updateUser,
   deleteUser,
+  forgotPassword, // Added this
+  resetPassword,  // Added this
+  verifyEmail,              // Added import
+  resendVerificationCode,  // Added import
 } from "../controller/userController.js";
 
 const router = express.Router();
 
 // Public routes
 router.post("/login", loginUser);
+router.post("/forgot-password", forgotPassword); // Moved to its own line
+router.post("/reset-password/:token", resetPassword); // Moved to its own line
+router.post("/verify-email", verifyEmail);                      // Added route
+router.post("/resend-verification", resendVerificationCode);    // Added route
 
 // Protected routes
 router.post(

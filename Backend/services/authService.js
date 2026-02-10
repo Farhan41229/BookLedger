@@ -1,8 +1,10 @@
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key_change_in_production";
-const JWT_EXPIRE = "24h";
+const JWT_SECRET =
+  process.env.JWT_SECRET || 'your_jwt_secret_key_change_in_production';
+const JWT_EXPIRE = '24h';
 const BCRYPT_SALT_ROUNDS = 10;
 
 /**
@@ -47,4 +49,20 @@ export const hashPassword = async (password) => {
  */
 export const comparePassword = async (password, passwordHash) => {
   return bcrypt.compare(password, passwordHash);
+};
+
+/**
+ * Generate verification code (6-digit code)
+ * @returns {String} 6-digit verification code
+ */
+export const generateVerificationCode = () => {
+  return crypto.randomInt(100000, 999999).toString();
+};
+
+/**
+ * Generate password reset token
+ * @returns {String} Random reset token (hex format)
+ */
+export const generateResetCode = () => {
+  return crypto.randomInt(100000, 999999).toString();
 };

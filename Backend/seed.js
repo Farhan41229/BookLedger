@@ -79,18 +79,21 @@ const sampleUsers = [
     email: 'admin@example.com',
     password: 'admin123', // Will be hashed
     role: 'Admin',
+    isEmailVerified: true,
   },
   {
     name: 'Manager User',
     email: 'manager@example.com',
     password: 'manager123',
     role: 'Manager',
+    isEmailVerified: true,
   },
   {
     name: 'Cashier User',
     email: 'cashier@example.com',
     password: 'cashier123',
     role: 'Cashier',
+    isEmailVerified: true,
   },
 ];
 
@@ -134,6 +137,8 @@ async function seedDatabase() {
       })),
     );
 
+    console.log('Users with Hashed Passwords: ', usersWithHashedPasswords);
+
     const createdUsers = await User.insertMany(usersWithHashedPasswords);
     console.log(`✓ Created ${createdUsers.length} sample users`);
 
@@ -153,6 +158,7 @@ async function seedDatabase() {
       console.log(`Email: ${user.email}`);
       console.log(`Password: ${user.password}`);
       console.log(`Role: ${user.role}\n`);
+      console.log(`Account Verified: ${user.isEmailVerified}\n`);
     });
 
     console.log('Sample Books Created:');
