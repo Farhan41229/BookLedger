@@ -4,7 +4,7 @@ import { createBrowserRouter } from "react-router";
 import RootLayout from "@/layouts/RootLayout";
 import AuthLayout from "@/layouts/AuthLayout";
 import DashboardLayout from "@/layouts/DashboardLayout";
-
+import PublicLayout from "@/layouts/PublicLayout";
 // Pages
 import Landing from "@/pages/Landing";
 import LoginPage from "@/pages/LoginPage";
@@ -25,6 +25,12 @@ const router = createBrowserRouter([
     path: "/",
     element: <RootLayout />,
     children: [
+      {
+        element: <PublicLayout />,
+        children: [
+          { index: true, element: <Landing /> },
+        ],
+      },
       { index: true, element: <Landing /> },
 
       // Auth Routes

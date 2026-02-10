@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { Outlet } from "react-router"; 
+import { Outlet } from "react-router";
 import useAuthStore from "@/store/authStore";
-import { Toaster } from "@/components/ui/toaster"; // Ensure you have your toaster here
+import { Toaster } from "@/components/ui/sonner"; // Ensure you have your toaster here
 
 const RootLayout = () => {
   const { checkAuth, isCheckingAuth } = useAuthStore();
