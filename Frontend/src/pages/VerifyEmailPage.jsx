@@ -1,18 +1,48 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { Link } from 'react-router';
+import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
+import useAuthStore from '@/store/authStore';
 
 const VerifyEmailPage = () => {
   const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [isLoading, setIsLoading] = useState(false);
   const inputRefs = useRef([]);
+  const navigate = useNavigate();
+
+  const {
+    unverifiedEmail,
+    verifyEmail,
+    resendVerification,
+    isLoading,
+    error,
+    message,
+    clearError,
+    clearMessage,
+  } = useAuthStore();
+
+  useEffect(() => {
+    if (!unverifiedEmail) {
+      navigate('/auth/login', { replace: true });
+    }
+  }, [unverifiedEmail, navigate]);
+
+  useEffect(() => {
+    clearError();
+    clearMessage();
+  }, []);
+
+  const handleVerify = useCallback(async (verificationCode) => {
+    if (!unverifiedEmail) return;
+    const result = await verifyEmail(unverifiedEmail, verificationCode);
+    if (result.success) {
+      navigate('/auth/login');
+    }
+  }, [unverifiedEmail, verifyEmail, navigate]);
 
   const handleChange = (index, value) => {
     const newCode = [...code];
 
-    // Handle pasted content
     if (value.length > 1) {
       const pastedCode = value.slice(0, 6).split('');
       for (let i = 0; i < 6; i++) {
@@ -41,18 +71,17 @@ const VerifyEmailPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const verificationCode = code.join('');
-    setIsLoading(true);
-    console.log('Verifying code:', verificationCode);
-    setTimeout(() => setIsLoading(false), 1500);
+    handleVerify(code.join(''));
   };
 
   // Auto-submit when all fields are filled
   useEffect(() => {
     if (code.every((digit) => digit !== '')) {
-      handleSubmit(new Event('submit'));
+      handleVerify(code.join(''));
     }
-  }, [code]);
+  }, [code, handleVerify]);
+
+  if (!unverifiedEmail) return null;
 
   return (
     <motion.div
@@ -67,8 +96,23 @@ const VerifyEmailPage = () => {
             Verify Your Email
           </h2>
           <p className="text-muted-foreground text-center text-sm mb-6">
-            Enter the 6-digit code sent to your email address.
+            Enter the 6-digit code sent to{' '}
+            <span className="font-medium text-foreground">
+              {unverifiedEmail}
+            </span>
           </p>
+
+          {error && (
+            <div className="text-destructive text-sm text-center bg-destructive/10 rounded-lg p-3 mb-4">
+              {error}
+            </div>
+          )}
+
+          {message && (
+            <div className="text-primary text-sm text-center bg-primary/10 rounded-lg p-3 mb-4">
+              {message}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex justify-between gap-2">
@@ -103,14 +147,14 @@ const VerifyEmailPage = () => {
           </form>
         </div>
 
-        {/* Footer */}
         <div className="px-8 py-4 border-t border-border/50 bg-muted/20 text-center">
           <p className="text-sm text-muted-foreground">
             Didn&apos;t receive the code?{' '}
             <button
               type="button"
               className="text-primary font-medium hover:underline"
-              onClick={() => console.log('Resend code clicked')}
+              disabled={isLoading}
+              onClick={() => resendVerification(unverifiedEmail)}
             >
               Resend
             </button>

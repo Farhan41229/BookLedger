@@ -1,9 +1,10 @@
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import crypto from "crypto";
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key_change_in_production";
-const JWT_EXPIRE = "24h";
+const JWT_SECRET =
+  process.env.JWT_SECRET || 'your_jwt_secret_key_change_in_production';
+const JWT_EXPIRE = '24h';
 const BCRYPT_SALT_ROUNDS = 10;
 
 /**
@@ -62,6 +63,6 @@ export const generateVerificationCode = () => {
  * Generate password reset token
  * @returns {String} Random reset token (hex format)
  */
-export const generateResetToken = () => {
-  return crypto.randomBytes(32).toString("hex");
+export const generateResetCode = () => {
+  return crypto.randomInt(100000, 999999).toString();
 };

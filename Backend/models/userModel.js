@@ -38,19 +38,19 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
-    accountVerified: { // Added this field
+    isEmailVerified: {
+      // Added this field
       type: Boolean,
       default: false,
     },
 
-
-
-// --- UPDATED SECTION START ---
+    // --- UPDATED SECTION START ---
     resetPasswordToken: {
       type: String,
       default: null,
     },
-    resetPasswordExpiry: { // <--- FIXED: Removed "Token" from the name to match Controller
+    resetPasswordExpiry: {
+      // <--- FIXED: Removed "Token" from the name to match Controller
       type: Date,
       default: null,
     },

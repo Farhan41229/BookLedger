@@ -7,10 +7,11 @@ import {
   getUserById,
   updateUser,
   deleteUser,
-  forgotPassword, // Added this
-  resetPassword,  // Added this
-  verifyEmail,              // Added import
-  resendVerificationCode,  // Added import
+  forgotPassword,
+  resetPassword,
+  verifyEmail,
+  resendVerificationCode,
+  getMe,
 } from "../controller/userController.js";
 
 const router = express.Router();
@@ -23,6 +24,8 @@ router.post("/verify-email", verifyEmail);                      // Added route
 router.post("/resend-verification", resendVerificationCode);    // Added route
 
 // Protected routes
+router.get("/me", authenticate, getMe);
+
 router.post(
   "/register",
   authenticate,

@@ -1,19 +1,39 @@
-import { User } from "../models/userModel.js";
+import { User } from '../models/userModel.js';
 import {
   hashPassword,
   generateToken,
   comparePassword,
   generateVerificationCode,
-  generateResetToken,
-} from "../services/authService.js";
-import { createAuditLog } from "../services/auditService.js";
+  generateResetCode,
+} from '../services/authService.js';
+import { createAuditLog } from '../services/auditService.js';
 import {
   sendVerificationEmail,
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendPasswordResetSuccessEmail,
-} from "../Brevo/Brevoemail.js";
-import crypto from "crypto";
+} from '../Brevo/Brevoemail.js';
+import crypto from 'crypto';
+
+/**
+ * Get current authenticated user
+ * GET /users/me
+ */
+export const getMe = async (req, res, next) => {
+  try {
+    res.status(200).json({
+      success: true,
+      user: {
+        id: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        role: req.user.role,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
  * Register a new user (Admin only)
@@ -26,7 +46,8 @@ export const registerUser = async (req, res, next) => {
     if (!name || !email || !password || !role) {
       return res.status(400).json({
         success: false,
-        message: "Please provide all required fields: name, email, password, role",
+        message:
+          'Please provide all required fields: name, email, password, role',
       });
     }
 
@@ -34,22 +55,22 @@ export const registerUser = async (req, res, next) => {
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: "Email already registered",
+        message: 'Email already registered',
       });
     }
 
-    const validRoles = ["Admin", "Manager", "Cashier"];
+    const validRoles = ['Admin', 'Manager', 'Cashier'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         success: false,
-        message: `Invalid role. Must be one of: ${validRoles.join(", ")}`,
+        message: `Invalid role. Must be one of: ${validRoles.join(', ')}`,
       });
     }
 
     const hashedPassword = await hashPassword(password);
 
     // --- UPDATED: VERIFICATION LOGIC ---
-    const verificationCode = generateVerificationCode();
+    const verificationToken = generateVerificationCode();
 
     const user = await User.create({
       name,
@@ -57,25 +78,30 @@ export const registerUser = async (req, res, next) => {
       password: hashedPassword,
       role,
       isEmailVerified: false, // Account starts as unverified
-      verificationCode,
-      verificationCodeExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h expiry
+      verificationToken,
+      verificationTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h expiry
     });
 
-    await sendVerificationEmail(user.email, verificationCode);
+    await sendVerificationEmail(user.email, verificationToken);
 
     await createAuditLog(
-      "User",
-      "Insert",
+      'User',
+      'Insert',
       req.user._id,
       null,
       { name: user.name, email: user.email, role: user.role },
-      user._id
+      user._id,
     );
 
     res.status(201).json({
       success: true,
-      message: "User registered successfully. Please verify your email.",
-      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      message: 'User registered successfully. Please verify your email.',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (error) {
     next(error);
@@ -91,36 +117,48 @@ export const loginUser = async (req, res, next) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Please provide email and password" });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Please provide email and password' });
     }
 
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
-      return res.status(401).json({ success: false, message: "Invalid email or password" });
+      return res
+        .status(401)
+        .json({ success: false, message: 'Invalid email or password' });
     }
 
     // --- UPDATED: BLOCK LOGIN IF NOT VERIFIED ---
     if (!user.isEmailVerified) {
       return res.status(403).json({
         success: false,
-        message: "Your account is not verified. Please check your email for the verification code.",
+        message:
+          'Your account is not verified. Please check your email for the verification code.',
       });
     }
 
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
-      return res.status(401).json({ success: false, message: "Invalid email or password" });
+      return res
+        .status(401)
+        .json({ success: false, message: 'Invalid email or password' });
     }
 
     const token = generateToken(user._id);
 
     res.status(200).json({
       success: true,
-      message: "Login successful",
+      message: 'Login successful',
       token,
-      user: { id: user._id, name: user.name, email: user.email, role: user.role },
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (error) {
     next(error);
@@ -139,7 +177,7 @@ export const getAllUsers = async (req, res, next) => {
     const skip = (page - 1) * limit;
 
     const users = await User.find()
-      .select("-password")
+      .select('-password')
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
@@ -167,12 +205,12 @@ export const getAllUsers = async (req, res, next) => {
  */
 export const getUserById = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id).select("-password");
+    const user = await User.findById(req.params.id).select('-password');
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: 'User not found',
       });
     }
 
@@ -198,7 +236,7 @@ export const updateUser = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: 'User not found',
       });
     }
 
@@ -217,8 +255,8 @@ export const updateUser = async (req, res, next) => {
 
     // Create audit log
     await createAuditLog(
-      "User",
-      "Update",
+      'User',
+      'Update',
       req.user._id,
       beforeValue,
       {
@@ -226,12 +264,12 @@ export const updateUser = async (req, res, next) => {
         email: user.email,
         role: user.role,
       },
-      user._id
+      user._id,
     );
 
     res.status(200).json({
       success: true,
-      message: "User updated successfully",
+      message: 'User updated successfully',
       user: {
         id: user._id,
         name: user.name,
@@ -255,14 +293,14 @@ export const deleteUser = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: 'User not found',
       });
     }
 
     // Create audit log
     await createAuditLog(
-      "User",
-      "Delete",
+      'User',
+      'Delete',
       req.user._id,
       {
         name: user.name,
@@ -270,12 +308,12 @@ export const deleteUser = async (req, res, next) => {
         role: user.role,
       },
       null,
-      user._id
+      user._id,
     );
 
     res.status(200).json({
       success: true,
-      message: "User deleted successfully",
+      message: 'User deleted successfully',
     });
   } catch (error) {
     next(error);
@@ -294,7 +332,7 @@ export const verifyEmail = async (req, res, next) => {
     if (!email || !code) {
       return res.status(400).json({
         success: false,
-        message: "Please provide email and verification code",
+        message: 'Please provide email and verification code',
       });
     }
 
@@ -304,7 +342,7 @@ export const verifyEmail = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: 'User not found',
       });
     }
 
@@ -312,30 +350,32 @@ export const verifyEmail = async (req, res, next) => {
     if (user.isEmailVerified) {
       return res.status(400).json({
         success: false,
-        message: "Email already verified",
+        message: 'Email already verified',
       });
     }
 
     // Check verification code
-    if (user.verificationCode !== code) {
+    if (user.verificationToken !== code) {
       return res.status(400).json({
         success: false,
-        message: "Invalid verification code",
+        message: 'Invalid verification code',
+        code: code,
+        verificationToken: user.verificationToken,
       });
     }
 
     // Check if code expired
-    if (user.verificationCodeExpiry < new Date()) {
+    if (user.verificationTokenExpiry < new Date()) {
       return res.status(400).json({
         success: false,
-        message: "Verification code has expired",
+        message: 'Verification code has expired',
       });
     }
 
     // Mark email as verified
     user.isEmailVerified = true;
-    user.verificationCode = null;
-    user.verificationCodeExpiry = null;
+    user.verificationToken = null;
+    user.verificationTokenExpiry = null;
     await user.save();
 
     // Send welcome email
@@ -343,17 +383,17 @@ export const verifyEmail = async (req, res, next) => {
 
     // Create audit log
     await createAuditLog(
-      "User",
-      "Update",
+      'User',
+      'Update',
       user._id,
       { isEmailVerified: false },
       { isEmailVerified: true },
-      user._id
+      user._id,
     );
 
     res.status(200).json({
       success: true,
-      message: "Email verified successfully",
+      message: 'Email verified successfully',
       user: {
         id: user._id,
         name: user.name,
@@ -379,7 +419,7 @@ export const resendVerificationCode = async (req, res, next) => {
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: "Please provide email",
+        message: 'Please provide email',
       });
     }
 
@@ -389,7 +429,7 @@ export const resendVerificationCode = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        message: 'User not found',
       });
     }
 
@@ -397,40 +437,39 @@ export const resendVerificationCode = async (req, res, next) => {
     if (user.isEmailVerified) {
       return res.status(400).json({
         success: false,
-        message: "Email already verified",
+        message: 'Email already verified',
       });
     }
 
     // Generate new verification code
-    const verificationCode = generateVerificationCode();
+    const verificationToken = generateVerificationCode();
 
     // Update user
-    user.verificationCode = verificationCode;
-    user.verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
     await user.save();
 
     // Send verification email
-    await sendVerificationEmail(user.email, verificationCode);
+    await sendVerificationEmail(user.email, verificationToken);
 
     // Create audit log
     await createAuditLog(
-      "User",
-      "Update",
+      'User',
+      'Update',
       user._id,
-      { verificationCode: "resent" },
-      { verificationCode: "resent" },
-      user._id
+      { verificationCode: 'resent' },
+      { verificationCode: 'resent' },
+      user._id,
     );
 
     res.status(200).json({
       success: true,
-      message: "Verification code sent successfully",
+      message: 'Verification code sent successfully',
     });
   } catch (error) {
     next(error);
   }
 };
-
 
 /**
  * Forgot Password - Send reset email
@@ -441,30 +480,37 @@ export const forgotPassword = async (req, res, next) => {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({ success: false, message: "Please provide an email" });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Please provide an email' });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: 'User not found' });
     }
 
     // Generate reset token using your existing service
-    const resetToken = generateResetToken();
-    
+    const resetToken = generateResetCode();
+
     // Set token and expiry (1 hour)
-    user.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex");
+    user.resetPasswordToken = resetToken;
     user.resetPasswordExpiry = Date.now() + 60 * 60 * 1000;
 
     await user.save();
 
+    // Build full reset URL for the email link (frontend reset page)
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetURL = `${frontendUrl}/auth/reset-password/${resetToken}`;
+
     // Send the email using your Brevo service
-    // Note: In a real app, you'd send the 'resetToken' (unhashed) to the user via URL
-    await sendPasswordResetEmail(user.email, resetToken);
+    await sendPasswordResetEmail(user.email, resetURL);
 
     res.status(200).json({
       success: true,
-      message: "Password reset email sent successfully",
+      message: 'Password reset email sent successfully',
     });
   } catch (error) {
     next(error);
@@ -481,7 +527,7 @@ export const resetPassword = async (req, res, next) => {
     const { token } = req.params;
 
     // Hash the token from the URL to compare with DB
-    const resetPasswordToken = crypto.createHash("sha256").update(token).digest("hex");
+    const resetPasswordToken = token;
 
     const user = await User.findOne({
       resetPasswordToken,
@@ -489,7 +535,9 @@ export const resetPassword = async (req, res, next) => {
     });
 
     if (!user) {
-      return res.status(400).json({ success: false, message: "Invalid or expired token" });
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid or expired token' });
     }
 
     // Hash new password and clear reset fields
@@ -504,7 +552,7 @@ export const resetPassword = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Password reset successful",
+      message: 'Password reset successful',
     });
   } catch (error) {
     next(error);
