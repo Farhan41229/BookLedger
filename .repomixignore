@@ -1,0 +1,60 @@
+# --- Dependencies & Lock Files ---
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+
+# --- Build Outputs (React/Vite/Next/Webpack) ---
+dist/
+build/
+out/
+.next/
+.output/
+coverage/
+*.min.js
+*.min.css
+*.map
+
+# --- Environment & Secrets (CRITICAL) ---
+.env
+.env.local
+.env.*
+.DS_Store
+
+# --- Logs & Debugging ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+tmp/
+temp/
+
+# --- IDE & Git Metadata ---
+.vscode/
+.idea/
+.git/
+.gitignore
+.repomixignore
+repomix-output.xml
+repomix-output.md
+repomix-output.txt
+
+# --- Static Assets & Media ---
+# LLMs generally don't need binary image/font data to understand code logic
+public/
+src/assets/images/
+*.svg
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.woff
+*.woff2
+*.ttf
+*.eot
+*.mp4
+*.webm
