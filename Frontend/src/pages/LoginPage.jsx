@@ -1,22 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Loader2 } from 'lucide-react';
-import { Link } from 'react-router';
+import { useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { IconInput } from '@/components/auth/IconInput';
 import { PasswordInput } from '@/components/auth/PasswordInput';
+import useAuthStore from '@/store/authStore';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const { login, isLoading, error, message, clearError, clearMessage } =
+    useAuthStore();
+
+  useEffect(() => {
+    clearError();
+    clearMessage();
+  }, []);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    console.log('Login attempt:', { email, password });
-    setTimeout(() => setIsLoading(false), 1500);
+    const result = await login(email, password);
+    if (result.success) {
+      navigate('/dashboard');
+    } else if (result.unverified) {
+      navigate('/auth/verify-email');
+    }
   };
 
   return (
@@ -34,6 +46,18 @@ const LoginPage = () => {
           <p className="text-muted-foreground text-center text-sm mb-6">
             Sign in to your BookLedger account
           </p>
+
+          {error && (
+            <div className="text-destructive text-sm text-center bg-destructive/10 rounded-lg p-3 mb-4">
+              {error}
+            </div>
+          )}
+
+          {message && (
+            <div className="text-primary text-sm text-center bg-primary/10 rounded-lg p-3 mb-4">
+              {message}
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <IconInput
@@ -84,20 +108,11 @@ const LoginPage = () => {
               </Button>
             </motion.div>
           </form>
-
-
         </div>
 
-        {/* Footer */}
         <div className="px-8 py-4 border-t border-border/50 bg-muted/20 text-center">
           <p className="text-sm text-muted-foreground">
-            Don&apos;t have an account?{' '}
-            <Link
-              to="/auth/signup"
-              className="text-primary font-medium hover:underline"
-            >
-              Sign up
-            </Link>
+            Contact your administrator to create an account
           </p>
         </div>
       </div>

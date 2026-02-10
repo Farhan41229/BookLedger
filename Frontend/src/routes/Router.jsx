@@ -3,8 +3,9 @@ import { createBrowserRouter } from 'react-router';
 import Landing from '@/pages/Landing';
 import AuthLayout from '@/layouts/AuthLayout';
 import LoginPage from '@/pages/LoginPage';
-import SignupPage from '@/pages/SignupPage';
 import VerifyEmailPage from '@/pages/VerifyEmailPage';
+import DashboardPage from '@/pages/DashboardPage';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 const router = createBrowserRouter([
   {
@@ -20,14 +21,18 @@ const router = createBrowserRouter([
         element: <LoginPage />,
       },
       {
-        path: 'signup',
-        element: <SignupPage />,
-      },
-      {
         path: 'verify-email',
         element: <VerifyEmailPage />,
       },
     ],
+  },
+  {
+    path: '/dashboard',
+    element: (
+      <ProtectedRoute>
+        <DashboardPage />
+      </ProtectedRoute>
+    ),
   },
 ]);
 

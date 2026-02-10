@@ -16,6 +16,26 @@ import {
 import crypto from 'crypto';
 
 /**
+ * Get current authenticated user
+ * GET /users/me
+ */
+export const getMe = async (req, res, next) => {
+  try {
+    res.status(200).json({
+      success: true,
+      user: {
+        id: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        role: req.user.role,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Register a new user (Admin only)
  * POST /users/register
  */

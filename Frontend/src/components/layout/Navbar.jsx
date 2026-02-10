@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Book, Menu, X } from 'lucide-react';
-import { Link } from 'react-router';
+import { Book, Menu, X, LogOut } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import useAuthStore from '@/store/authStore';
 
 const navLinks = [
   { label: 'Features', id: 'features' },
@@ -14,6 +15,14 @@ const navLinks = [
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, token, logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    setMobileOpen(false);
+    logout();
+    navigate('/auth/login');
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -71,12 +80,22 @@ const Navbar = () => {
 
             {/* CTA Buttons */}
             <div className="hidden md:flex items-center gap-3">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/auth/login">Sign In</Link>
-              </Button>
-              <Button size="sm" className="shadow-md shadow-primary/25" asChild>
-                <Link to="/auth/signup">Get Started</Link>
-              </Button>
+              {user && token ? (
+                <>
+                  <span className="text-sm text-muted-foreground">{user.name}</span>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to="/dashboard">Dashboard</Link>
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={handleLogout}>
+                    <LogOut className="h-4 w-4 mr-1" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/auth/login">Sign In</Link>
+                </Button>
+              )}
             </div>
 
             {/* Mobile Menu Toggle */}
@@ -111,12 +130,21 @@ const Navbar = () => {
                 </button>
               ))}
               <div className="flex gap-3 pt-3 border-t mt-3">
-                <Button variant="ghost" size="sm" className="flex-1" asChild>
-                  <Link to="/auth/login">Sign In</Link>
-                </Button>
-                <Button size="sm" className="flex-1 shadow-md shadow-primary/25" asChild>
-                  <Link to="/auth/signup">Get Started</Link>
-                </Button>
+                {user && token ? (
+                  <>
+                    <Button variant="ghost" size="sm" className="flex-1" asChild>
+                      <Link to="/dashboard">Dashboard</Link>
+                    </Button>
+                    <Button variant="ghost" size="sm" className="flex-1" onClick={handleLogout}>
+                      <LogOut className="h-4 w-4 mr-1" />
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <Button variant="ghost" size="sm" className="flex-1" asChild>
+                    <Link to="/auth/login">Sign In</Link>
+                  </Button>
+                )}
               </div>
             </div>
           </motion.div>
