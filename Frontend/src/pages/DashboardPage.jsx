@@ -1,17 +1,17 @@
 import { motion } from 'framer-motion';
 import { LogOut, User, Mail, Shield, Book } from 'lucide-react';
-import { useNavigate, Link } from 'react-router';
+import { Link } from 'react-router';
+import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import useAuthStore from '@/store/authStore';
 
 const DashboardPage = () => {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    navigate('/auth/login');
+    toast.success('Successfully logged out');
   };
 
   return (

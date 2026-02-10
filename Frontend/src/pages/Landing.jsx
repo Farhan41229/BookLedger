@@ -1,6 +1,3 @@
-import ScrollProgress from '@/components/layout/ScrollProgress';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
 import HeroSection from '@/components/landing/HeroSection';
 import BrandShowcase from '@/components/landing/BrandShowcase';
 import FeaturesSection from '@/components/landing/FeaturesSection';
@@ -13,22 +10,17 @@ import CTASection from '@/components/landing/CTASection';
 
 const Landing = () => {
   return (
-    <div className="min-h-screen">
-      <ScrollProgress />
-      <Navbar />
-      <main>
-        <HeroSection />
-        <BrandShowcase />
-        <FeaturesSection />
-        <HowItWorksSection />
-        <StatsSection />
-        <PricingSection />
-        <TestimonialsSection />
-        <FAQSection />
-        <CTASection />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <HeroSection />
+      <BrandShowcase />
+      <FeaturesSection />
+      <HowItWorksSection />
+      <StatsSection />
+      <PricingSection />
+      <TestimonialsSection />
+      <FAQSection />
+      <CTASection />
+    </>
   );
 };
 

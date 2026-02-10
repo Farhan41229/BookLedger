@@ -1,6 +1,8 @@
 import React from 'react';
 import { createBrowserRouter } from 'react-router';
+import RootLayout from '@/layouts/RootLayout';
 import Landing from '@/pages/Landing';
+import AboutPage from '@/pages/AboutPage';
 import AuthLayout from '@/layouts/AuthLayout';
 import LoginPage from '@/pages/LoginPage';
 import VerifyEmailPage from '@/pages/VerifyEmailPage';
@@ -12,7 +14,11 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Landing />,
+    element: <RootLayout />,
+    children: [
+      { index: true, element: <Landing /> },
+      { path: 'about', element: <AboutPage /> },
+    ],
   },
   {
     path: '/auth',
