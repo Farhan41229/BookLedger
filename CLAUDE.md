@@ -1,63 +1,91 @@
 # BookLedger
 
-Personal book collection management app. Frontend-only with landing page and auth UI.
+Personal book collection management app with Express/MongoDB backend and React frontend.
 
 ## Tech Stack
 
+### Frontend (`Frontend/`)
 - **React 19** + **React Router 7** (SPA, no SSR) — JSX only, no TypeScript
 - **Tailwind CSS 4** — inline `@theme` config in `src/index.css`, OKLch colors
 - **shadcn/ui** (new-york, JSX, Lucide icons) — add via `npx shadcn@latest add <component>` from `Frontend/`
 - **Framer Motion** for animations
+- **Zustand** for state management (auth store)
+- **Axios** for API calls (`src/lib/axios.js`, baseURL: `http://localhost:4000/api`)
 - **Vite** via `rolldown-vite` (intentional alias, do not change)
-- No backend or global state management yet
+
+### Backend (`Backend/`)
+- **Express 5** + **Mongoose 9** (MongoDB)
+- **JWT auth** (24h expiry, Bearer token in Authorization header)
+- **Brevo** for transactional emails (verification, password reset)
+- **bcryptjs** for password hashing
 
 ## Project Structure
 
 ```
-Frontend/
-├── src/
-│   ├── components/
-│   │   ├── ui/          # shadcn/ui primitives (button, card, input, checkbox, etc.)
-│   │   ├── layout/      # Navbar, Footer, ScrollProgress
-│   │   ├── landing/     # Landing page sections (Hero, Features, Pricing, etc.)
-│   │   └── auth/        # Auth components (FloatingShape, IconInput, PasswordInput, PasswordStrengthMeter)
-│   ├── layouts/          # Route layouts (AuthLayout)
-│   ├── pages/            # Landing, LoginPage, SignupPage, VerifyEmailPage
-│   ├── routes/           # Router.jsx — React Router config
-│   ├── lib/              # utils.js (cn helper)
-│   ├── hooks/            # use-mobile.js
-│   ├── index.css         # Tailwind v4 theme + custom CSS utilities
-│   └── main.jsx
-├── components.json       # shadcn/ui config
-├── vite.config.js        # Vite + Tailwind plugin + @ alias
-└── package.json
+Frontend/src/
+├── components/
+│   ├── ui/          # shadcn/ui primitives
+│   ├── layout/      # Navbar, Footer, ScrollProgress
+│   ├── landing/     # Landing page sections
+│   └── auth/        # FloatingShape, IconInput, PasswordInput, PasswordStrengthMeter, ProtectedRoute
+├── layouts/          # AuthLayout
+├── pages/            # Landing, LoginPage, VerifyEmailPage, DashboardPage
+├── routes/           # Router.jsx
+├── store/            # authStore.js (Zustand)
+├── lib/              # utils.js, axios.js
+├── hooks/            # use-mobile.js
+└── index.css         # Tailwind v4 theme
+
+Backend/
+├── controller/       # userController, bookController, etc.
+├── routes/           # userRoutes, bookRoutes, etc.
+├── models/           # userModel, bookModel, etc.
+├── services/         # authService, auditService, etc.
+├── middlewares/       # authMiddleware, errorMiddleware
+├── Brevo/            # Brevo email config and templates
+├── Database/         # db.js (MongoDB connection)
+├── config/           # config.env
+├── script/           # Test scripts
+├── app.js            # Express app setup
+└── server.js         # Server entry point
 ```
 
 ## Routes
 
 - `/` — Landing page
 - `/auth/login` — Login page
-- `/auth/signup` — Signup page
-- `/auth/verify-email` — Email verification (OTP input)
+- `/auth/verify-email` — Email verification (6-digit OTP)
+- `/dashboard` — Protected dashboard (requires auth)
 
-Auth pages share `AuthLayout` (gradient bg, floating shapes, logo link to home).
+Auth pages share `AuthLayout`. Signup is Admin-only (no public signup page).
+
+## Auth Flow
+
+1. Login → `POST /api/users/login` → JWT token stored in localStorage
+2. If unverified (403) → redirect to `/auth/verify-email` → `POST /api/users/verify-email`
+3. On success → redirect to `/dashboard`
+4. Page refresh → `App.jsx` calls `checkAuth()` → `GET /api/users/me` rehydrates user from token
+5. `ProtectedRoute` guards `/dashboard` (shows spinner while checking, redirects if unauthenticated)
 
 ## Commands
 
-Run from `Frontend/`:
-
 ```sh
-npm run dev      # Dev server
+# Frontend (from Frontend/)
+npm run dev      # Dev server (port 5173)
 npm run build    # Production build
-npm run lint     # ESLint
+
+# Backend (from Backend/)
+npm run dev      # Dev server with nodemon (port 4000)
+npm start        # Production server
 ```
 
 ## Code Conventions
 
-- `@/` import alias maps to `./src`
+- `@/` import alias maps to `./src` (frontend)
 - Named exports for components; default export for pages and layouts
 - Arrow function components
 - `cn()` from `@/lib/utils` for class merging (clsx + tailwind-merge)
+- ES Modules throughout (both frontend and backend)
 
 ## Styling
 
