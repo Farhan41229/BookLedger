@@ -1,6 +1,113 @@
 import { Book } from "../models/bookModel.js";
 import { createAuditLog } from "../services/auditService.js";
 import { getEffectivePrice } from "../services/pricingService.js";
+import { generateAIText } from "../config/GeminiSetup.js";
+
+/**
+ * AI-powered book recommendation for guests
+ * POST /books/recommend
+ */
+export const recommendBooks = async (req, res, next) => {
+  try {
+    const { message } = req.body;
+
+    if (!message || message.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a message describing the type of book you're looking for.",
+      });
+    }
+
+    // Fetch all books (lean fields only — enough for AI to reason about)
+    const books = await Book.find({}, "_id title author genre price stockQuantity");
+
+    if (books.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No books are currently available in our collection.",
+      });
+    }
+
+    const bookList = books.map((b) => ({
+      id: b._id.toString(),
+      title: b.title,
+      author: b.author,
+      genre: b.genre || "Unknown",
+      price: b.price,
+      inStock: b.stockQuantity > 0,
+    }));
+
+    const prompt = `You are a generous book recommendation assistant for BookLedger, an online bookstore.
+
+User request: "${message.trim()}"
+
+Book inventory (JSON):
+${JSON.stringify(bookList)}
+
+Instructions:
+- Users are casual and rarely precise. Interpret their request broadly and generously.
+- Include a book if it could reasonably appeal to someone making this request — even a loose or indirect match counts.
+- When the user uses "/" or "or" or "and" between terms, treat ALL terms as valid and return books matching ANY of them.
+- Sub-genres count: e.g., "Dystopian" qualifies as fictional. "Thriller" qualifies as suspense/mystery.
+- When in doubt, include the book rather than exclude it. Err on the side of more results.
+- If the user's message is complete gibberish, spam, or has absolutely zero connection to finding a book, respond with exactly: GIBBERISH
+- If the request is genuinely valid but truly nothing in the inventory could even loosely match, respond with exactly: NO_MATCH
+- If any books match (even loosely), respond with a JSON array of matching book IDs: ["id1","id2"]
+
+Respond with ONLY one of the three formats above. No explanation, no extra text.`;
+
+    const aiResponse = await generateAIText(prompt);
+
+    if (!aiResponse || aiResponse.startsWith("Error:")) {
+      const err = new Error("AI service failed to respond. Please try again later.");
+      err.statusCode = 503;
+      return next(err);
+    }
+
+    const trimmed = aiResponse.trim();
+
+    if (trimmed.includes("GIBBERISH")) {
+      return res.status(400).json({
+        success: false,
+        message: "We couldn't understand your request. Please describe the type of book you're looking for and try again.",
+      });
+    }
+
+    if (trimmed.includes("NO_MATCH")) {
+      return res.status(404).json({
+        success: false,
+        message: "We couldn't find any books matching your request. Sorry!",
+      });
+    }
+
+    // Parse the array of IDs from Gemini's response
+    let matchedIds;
+    try {
+      const jsonMatch = trimmed.match(/\[.*\]/s);
+      matchedIds = JSON.parse(jsonMatch ? jsonMatch[0] : trimmed);
+      if (!Array.isArray(matchedIds)) throw new Error("Not an array");
+    } catch {
+      const err = new Error("Unexpected response from AI. Please try again.");
+      err.statusCode = 500;
+      return next(err);
+    }
+
+    const matchedBooks = await Book.find({ _id: { $in: matchedIds } });
+
+    const booksWithPrices = matchedBooks.map((book) => ({
+      ...book.toObject(),
+      effectivePrice: getEffectivePrice(book),
+    }));
+
+    res.status(200).json({
+      success: true,
+      books: booksWithPrices,
+      count: booksWithPrices.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
  * Create a new book (Manager/Admin only)
