@@ -1,18 +1,24 @@
-import React from "react";
 import { createBrowserRouter } from "react-router";
-import DashboardLayout from "@/layouts/DashboardLayout";
-import DashboardMain from "@/pages/dashboard/DashboardMain";
-import { createBrowserRouter } from "react-router";
+
+// Layouts
 import RootLayout from "@/layouts/RootLayout";
-import Landing from "@/pages/Landing";
-import AboutPage from "@/pages/AboutPage";
 import AuthLayout from "@/layouts/AuthLayout";
+import DashboardLayout from "@/layouts/DashboardLayout";
+
+// Pages
+import Landing from "@/pages/Landing";
 import LoginPage from "@/pages/LoginPage";
+// import SignupPage from "@/pages/auth/SignupPage";
 import VerifyEmailPage from "@/pages/VerifyEmailPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
-import DashboardPage from "@/pages/DashboardPage";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+
+// Dashboard Pages
+import DashboardMain from "@/pages/dashboard/DashboardMain";
+
+// Protection
+import ProtectedRoute from "@/components/auth/ProtectedRoute"; // Ensure this path is correct for your project
+import RedirectAuthenticatedUser from "@/components/auth/RedirectAuthenticatedUser"; // Ensure this path is correct
 
 const router = createBrowserRouter([
   {
@@ -20,47 +26,69 @@ const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       { index: true, element: <Landing /> },
-      { path: "about", element: <AboutPage /> },
-    ],
-  },
-  {
-    path: "/auth",
-    element: <AuthLayout />,
-    children: [
+
+      // Auth Routes
       {
         path: "login",
-        element: <LoginPage />,
+        element: (
+          <RedirectAuthenticatedUser>
+            <AuthLayout>
+              <LoginPage />
+            </AuthLayout>
+          </RedirectAuthenticatedUser>
+        ),
       },
+      // {
+      //   path: "signup",
+      //   element: (
+      //     <RedirectAuthenticatedUser>
+      //       <AuthLayout>
+      //         <LoginPage />
+      //       </AuthLayout>
+      //     </RedirectAuthenticatedUser>
+      //   ),
+      // },
       {
         path: "verify-email",
         element: <VerifyEmailPage />,
       },
       {
         path: "forgot-password",
-        element: <ForgotPasswordPage />,
+        element: (
+          <RedirectAuthenticatedUser>
+            <AuthLayout>
+              <ForgotPasswordPage />
+            </AuthLayout>
+          </RedirectAuthenticatedUser>
+        ),
       },
       {
         path: "reset-password/:token",
-        element: <ResetPasswordPage />,
+        element: (
+          <RedirectAuthenticatedUser>
+            <AuthLayout>
+              <ResetPasswordPage />
+            </AuthLayout>
+          </RedirectAuthenticatedUser>
+        ),
       },
-    ],
-  },
-  {
-    path: "/dashboard",
-    element: (
-      <ProtectedRoute>
-        <DashboardLayout />
-      </ProtectedRoute>
-    ),
-    children: [
+
+      // Dashboard Routes (New Implementation)
       {
-        index: true,
-        element: <DashboardMain />,
+        path: "dashboard",
+        element: (
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        ),
+        children: [
+          {
+            index: true,
+            element: <DashboardMain />,
+          },
+          // Future routes (Books, Sales, etc.) will go here
+        ],
       },
-      // Future routes to be added here in next phases:
-      // { path: "books", element: <BooksPage /> },
-      // { path: "sales", element: <SalesPage /> },
-      // etc.
     ],
   },
 ]);

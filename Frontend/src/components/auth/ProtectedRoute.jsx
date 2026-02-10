@@ -1,32 +1,27 @@
-import { useEffect } from 'react';
-import { Navigate } from 'react-router';
-import { Loader2 } from 'lucide-react';
-import useAuthStore from '@/store/authStore';
+import { Navigate } from "react-router"; 
+import useAuthStore from "@/store/authStore";
 
-export const ProtectedRoute = ({ children }) => {
-  const { token, user, isCheckingAuth, checkAuth } = useAuthStore();
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, user, isCheckingAuth } = useAuthStore();
 
-  useEffect(() => {
-    if (token && !user) {
-      checkAuth();
-    }
-  }, [token, user, checkAuth]);
-
-  if (!token) {
-    return <Navigate to="/auth/login" replace />;
-  }
-
-  if (isCheckingAuth || (!user && token)) {
+  if (isCheckingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center h-screen bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth/login" replace />;
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!user.isVerified) {
+    return <Navigate to="/verify-email" replace />;
   }
 
   return children;
 };
+
+// 👇 THIS LINE IS CRITICAL
+export default ProtectedRoute;

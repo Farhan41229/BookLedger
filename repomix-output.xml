@@ -111,6 +111,10 @@ Frontend/
         PasswordInput.jsx
         PasswordStrengthMeter.jsx
         ProtectedRoute.jsx
+        RedirectAuthenticatedUser.jsx
+      dashboard/
+        SalesTrendChart.jsx
+        StatCard.jsx
       landing/
         BrandShowcase.jsx
         CTASection.jsx
@@ -122,6 +126,7 @@ Frontend/
         StatsSection.jsx
         TestimonialsSection.jsx
       layout/
+        AppSidebar.jsx
         Footer.jsx
         Navbar.jsx
         ScrollProgress.jsx
@@ -144,15 +149,25 @@ Frontend/
         table.jsx
         tabs.jsx
         tooltip.jsx
+    config/
+      menuConfig.js
+    data/
+      dashboardData.js
     hooks/
       use-mobile.js
     layouts/
       AuthLayout.jsx
+      DashboardLayout.jsx
       RootLayout.jsx
     lib/
       axios.js
       utils.js
     pages/
+      dashboard/
+        AdminDashboard.jsx
+        CashierDashboard.jsx
+        DashboardMain.jsx
+        ManagerDashboard.jsx
       AboutPage.jsx
       DashboardPage.jsx
       ForgotPasswordPage.jsx
@@ -188,8 +203,53 @@ CLAUDE.md
 <files>
 This section contains the contents of the repository's files.
 
-<file path=".repomixignore">
-/Users/saklinemuttakeenshaan/Desktop/BookLedger/CLAUDE.md
+<file path="Frontend/src/components/auth/RedirectAuthenticatedUser.jsx">
+import { Navigate } from "react-router";
+import useAuthStore from "@/store/authStore";
+
+const RedirectAuthenticatedUser = ({ children }) => {
+  const { isAuthenticated, user } = useAuthStore();
+
+  if (isAuthenticated && user?.isVerified) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
+// 👇 THIS LINE IS CRITICAL
+export default RedirectAuthenticatedUser;
+</file>
+
+<file path="Frontend/src/layouts/DashboardLayout.jsx">
+import { Outlet } from "react-router"; // or "react-router-dom"
+import { AppSidebar } from "@/components/layout/AppSidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
+
+export default function DashboardLayout() {
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b px-4">
+          <SidebarTrigger className="-ml-1" />
+          <Separator orientation="vertical" className="mr-2 h-4" />
+          <div className="flex-1">
+             <span className="text-sm font-medium">Dashboard</span>
+          </div>
+        </header>
+        <main className="flex-1 p-4 md:p-6 overflow-auto">
+          <Outlet />
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
 </file>
 
 <file path="Backend/Brevo/Brevo.config.js">
@@ -5195,37 +5255,104 @@ export const PasswordStrengthMeter = ({ password = '' }) => {
 </file>
 
 <file path="Frontend/src/components/auth/ProtectedRoute.jsx">
-import { useEffect } from 'react';
-import { Navigate } from 'react-router';
-import { Loader2 } from 'lucide-react';
-import useAuthStore from '@/store/authStore';
+import { Navigate } from "react-router"; 
+import useAuthStore from "@/store/authStore";
 
-export const ProtectedRoute = ({ children }) => {
-  const { token, user, isCheckingAuth, checkAuth } = useAuthStore();
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, user, isCheckingAuth } = useAuthStore();
 
-  useEffect(() => {
-    if (token && !user) {
-      checkAuth();
-    }
-  }, [token, user, checkAuth]);
-
-  if (!token) {
-    return <Navigate to="/auth/login" replace />;
-  }
-
-  if (isCheckingAuth || (!user && token)) {
+  if (isCheckingAuth) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex items-center justify-center h-screen bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth/login" replace />;
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!user.isVerified) {
+    return <Navigate to="/verify-email" replace />;
   }
 
   return children;
+};
+
+// 👇 THIS LINE IS CRITICAL
+export default ProtectedRoute;
+</file>
+
+<file path="Frontend/src/components/dashboard/SalesTrendChart.jsx">
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
+export const SalesTrendChart = ({ data }) => {
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+        <XAxis 
+          dataKey="date" 
+          stroke="hsl(var(--muted-foreground))" 
+          fontSize={12} 
+          tickLine={false} 
+          axisLine={false}
+          dy={10}
+        />
+        <YAxis 
+          stroke="hsl(var(--muted-foreground))" 
+          fontSize={12} 
+          tickLine={false} 
+          axisLine={false}
+          tickFormatter={(value) => `$${value}`}
+        />
+        <Tooltip 
+          contentStyle={{ backgroundColor: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 'var(--radius)' }}
+          itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+        />
+        <Line
+          type="monotone"
+          dataKey="sales"
+          stroke="hsl(var(--primary))"
+          strokeWidth={2}
+          dot={false}
+          activeDot={{ r: 6 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+};
+</file>
+
+<file path="Frontend/src/components/dashboard/StatCard.jsx">
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowUp, ArrowDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+export const StatCard = ({ title, value, change, trend, icon: Icon }) => {
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-2xl font-bold mt-2">{value}</p>
+            <p className={cn(
+              "text-xs mt-1 flex items-center gap-1 font-medium",
+              trend === 'up' ? "text-green-500" : "text-red-500"
+            )}>
+              {trend === 'up' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+              {change}% vs yesterday
+            </p>
+          </div>
+          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Icon className="h-5 w-5 text-primary" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 };
 </file>
 
@@ -7613,6 +7740,85 @@ function TooltipContent({
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
 </file>
 
+<file path="Frontend/src/config/menuConfig.js">
+import {
+  LayoutDashboard,
+  BookOpen,
+  ShoppingCart,
+  Package,
+  Users,
+  Shield,
+  TrendingUp,
+  DollarSign,
+  FileText,
+  AlertCircle,
+  Bell,
+  Zap,
+  Search,
+  UserPlus
+} from 'lucide-react';
+
+export const getMenuItemsByRole = (role) => {
+  const baseItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' }
+  ];
+
+  const roleMenus = {
+    Admin: [
+      ...baseItems,
+      { icon: BookOpen, label: 'Books Management', path: '/dashboard/books' },
+      { icon: ShoppingCart, label: 'Sales & Transactions', path: '/dashboard/sales' },
+      { icon: Package, label: 'Inventory Control', path: '/dashboard/inventory' },
+      { icon: Users, label: 'Customer Management', path: '/dashboard/customers' },
+      { icon: Shield, label: 'User Management', path: '/dashboard/users' },
+      { icon: TrendingUp, label: 'Reports & Analytics', path: '/dashboard/reports' },
+      { icon: DollarSign, label: 'Pricing & Discounts', path: '/dashboard/pricing' },
+      { icon: FileText, label: 'Audit Logs', path: '/dashboard/audit' }
+    ],
+    Manager: [
+      ...baseItems,
+      { icon: BookOpen, label: 'Books Management', path: '/dashboard/books' },
+      { icon: ShoppingCart, label: 'Sales & Transactions', path: '/dashboard/sales' },
+      { icon: Package, label: 'Inventory Control', path: '/dashboard/inventory' },
+      { icon: Users, label: 'Customer Management', path: '/dashboard/customers' },
+      { icon: TrendingUp, label: 'Reports & Analytics', path: '/dashboard/reports' },
+      { icon: DollarSign, label: 'Pricing & Discounts', path: '/dashboard/pricing' }
+    ],
+    Cashier: [
+      ...baseItems,
+      { icon: ShoppingCart, label: 'New Sale', path: '/dashboard/new-sale' },
+      { icon: FileText, label: 'My Sales History', path: '/dashboard/my-sales' },
+      { icon: BookOpen, label: 'Browse Books', path: '/dashboard/books' },
+      { icon: Users, label: 'Find Customer', path: '/dashboard/customers' }
+    ]
+  };
+
+  return roleMenus[role] || baseItems;
+};
+
+export const getQuickAccessByRole = (role) => {
+  const quickAccess = {
+    Admin: [
+      { icon: AlertCircle, label: 'Dead Stock Items', path: '/dashboard/pricing' },
+      { icon: Bell, label: 'Reorder Alerts', path: '/dashboard/inventory' }, // Fixed path
+      { icon: TrendingUp, label: "Today's Sales", path: '/dashboard/reports' }
+    ],
+    Manager: [
+      { icon: AlertCircle, label: 'Dead Stock Items', path: '/dashboard/pricing' },
+      { icon: Bell, label: 'Reorder Alerts', path: '/dashboard/inventory' },
+      { icon: TrendingUp, label: "Today's Sales", path: '/dashboard/reports' }
+    ],
+    Cashier: [
+      { icon: Zap, label: 'Quick Checkout', path: '/dashboard/new-sale' },
+      { icon: Search, label: 'Search Books', path: '/dashboard/books' },
+      { icon: UserPlus, label: 'Create Customer', path: '/dashboard/customers' }
+    ]
+  };
+
+  return quickAccess[role] || [];
+};
+</file>
+
 <file path="Frontend/src/hooks/use-mobile.js">
 import * as React from "react"
 
@@ -7722,6 +7928,342 @@ import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs) {
   return twMerge(clsx(inputs));
+}
+</file>
+
+<file path="Frontend/src/pages/dashboard/AdminDashboard.jsx">
+import { useState, useEffect } from "react";
+import { ShoppingCart, DollarSign, BookOpen, Users } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { SalesTrendChart } from "@/components/dashboard/SalesTrendChart";
+import { adminDashboardData } from "@/data/dashboardData";
+
+export default function AdminDashboard() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    // Simulate API fetch
+    setTimeout(() => {
+      setData(adminDashboardData);
+    }, 500);
+  }, []);
+
+  if (!data)
+    return (
+      <div className="p-10 text-center text-muted-foreground">
+        Loading dashboard...
+      </div>
+    );
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Total Sales Today"
+          value={data.stats.todaySales.value}
+          change={data.stats.todaySales.change}
+          trend={data.stats.todaySales.trend}
+          icon={ShoppingCart}
+        />
+        <StatCard
+          title="Revenue Today"
+          value={`$${data.stats.todayRevenue.value.toLocaleString()}`}
+          change={data.stats.todayRevenue.change}
+          trend={data.stats.todayRevenue.trend}
+          icon={DollarSign}
+        />
+        <StatCard
+          title="Books Sold Today"
+          value={data.stats.booksSold.value}
+          change={data.stats.booksSold.change}
+          trend={data.stats.booksSold.trend}
+          icon={BookOpen}
+        />
+        <StatCard
+          title="Active Customers"
+          value={data.stats.activeCustomers.value}
+          change={data.stats.activeCustomers.change}
+          trend={data.stats.activeCustomers.trend}
+          icon={Users}
+        />
+      </div>
+
+      {/* Main Charts Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Sales Trend</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SalesTrendChart data={data.salesTrend} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Selling Books</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {data.topBooks.map((book, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-bold">
+                      {i + 1}
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">{book.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {book.sales} sold
+                      </p>
+                    </div>
+                  </div>
+                  <span className="font-semibold text-sm">
+                    ${book.revenue.toFixed(0)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Bottom Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Transactions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {data.recentTransactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0"
+                >
+                  <div>
+                    <p className="font-medium text-sm">Sale #{tx.id}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {tx.cashier} • {tx.time}
+                    </p>
+                  </div>
+                  <span className="font-bold text-sm">
+                    ${tx.amount.toFixed(2)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Inventory Quick View */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Inventory Health</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-center">
+                <div className="text-2xl font-bold text-destructive">
+                  {data.inventoryAlerts.outOfStock}
+                </div>
+                <div className="text-xs text-muted-foreground uppercase font-bold">
+                  Out of Stock
+                </div>
+              </div>
+              <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-center">
+                <div className="text-2xl font-bold text-yellow-600">
+                  {data.inventoryAlerts.lowStock}
+                </div>
+                <div className="text-xs text-muted-foreground uppercase font-bold">
+                  Low Stock
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="Frontend/src/pages/dashboard/CashierDashboard.jsx">
+import { useState, useEffect } from "react";
+import { Link } from "react-router";
+import { ShoppingCart, DollarSign, Search, UserPlus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { cashierDashboardData } from "@/data/dashboardData";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+
+export default function CashierDashboard() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    setTimeout(() => setData(cashierDashboardData), 500);
+  }, []);
+
+  if (!data) return <div className="p-10 text-center text-muted-foreground">Loading...</div>;
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      
+      {/* Quick Actions Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+         <Button asChild size="lg" className="h-24 text-lg bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 border">
+            <Link to="/dashboard/new-sale">
+               <ShoppingCart className="mr-2 h-8 w-8" /> New Sale (POS)
+            </Link>
+         </Button>
+         <Button asChild size="lg" variant="outline" className="h-24 text-lg">
+            <Link to="/dashboard/books">
+               <Search className="mr-2 h-8 w-8" /> Lookup Book
+            </Link>
+         </Button>
+         <Button asChild size="lg" variant="outline" className="h-24 text-lg">
+            <Link to="/dashboard/customers">
+               <UserPlus className="mr-2 h-8 w-8" /> Add Customer
+            </Link>
+         </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard title="My Sales Today" value={data.stats.mySales.value} change={data.stats.mySales.change} trend={data.stats.mySales.trend} icon={ShoppingCart} />
+        <StatCard title="My Revenue" value={`$${data.stats.myRevenue.value}`} change={data.stats.myRevenue.change} trend={data.stats.myRevenue.trend} icon={DollarSign} />
+        <StatCard title="Avg. Sale Value" value={`$${data.stats.avgSale.value}`} change={data.stats.avgSale.change} trend={data.stats.avgSale.trend} icon={DollarSign} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Hourly Performance */}
+        <Card>
+          <CardHeader><CardTitle>My Hourly Performance</CardTitle></CardHeader>
+          <CardContent className="h-[300px]">
+             <ResponsiveContainer width="100%" height="100%">
+               <BarChart data={data.hourlyPerformance}>
+                 <XAxis dataKey="time" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                 <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                 <Tooltip cursor={{fill: 'transparent'}} />
+                 <Bar dataKey="sales" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+               </BarChart>
+             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Recent Sales List */}
+        <Card>
+          <CardHeader><CardTitle>My Recent Transactions</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {data.recentSales.map((sale) => (
+                <div key={sale.id} className="flex items-center justify-between border-b pb-3 last:border-0">
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                       <ShoppingCart className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Sale #{sale.id}</p>
+                      <p className="text-xs text-muted-foreground">{sale.items} items • {sale.time}</p>
+                    </div>
+                  </div>
+                  <div className="font-bold text-right">
+                     ${sale.total.toFixed(2)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="Frontend/src/pages/dashboard/ManagerDashboard.jsx">
+import { useState, useEffect } from "react";
+import { Package, TrendingUp, AlertCircle, DollarSign } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCard } from "@/components/dashboard/StatCard";
+import { managerDashboardData } from "@/data/dashboardData";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+
+export default function ManagerDashboard() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    setTimeout(() => setData(managerDashboardData), 500);
+  }, []);
+
+  if (!data) return <div className="p-10 text-center text-muted-foreground">Loading...</div>;
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+  return (
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard title="Total Revenue" value={`$${data.stats.revenue.value}`} change={data.stats.revenue.change} trend={data.stats.revenue.trend} icon={DollarSign} />
+        <StatCard title="Weekly Sales" value={`$${data.stats.weeklySales.value}`} change={data.stats.weeklySales.change} trend={data.stats.weeklySales.trend} icon={TrendingUp} />
+        <StatCard title="Total Inventory" value={data.stats.inventoryCount.value} change={data.stats.inventoryCount.change} trend={data.stats.inventoryCount.trend} icon={Package} />
+        <StatCard title="Low Stock Alerts" value={data.stats.lowStock.value} change={data.stats.lowStock.change} trend={data.stats.lowStock.trend} icon={AlertCircle} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Sales By Category */}
+        <Card>
+          <CardHeader><CardTitle>Sales by Category</CardTitle></CardHeader>
+          <CardContent className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={data.salesByCategory}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {data.salesByCategory.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="flex justify-center gap-4 text-sm text-muted-foreground mt-4">
+              {data.salesByCategory.map((item, index) => (
+                <div key={index} className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index] }} />
+                  {item.name}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Dead Stock Watchlist */}
+        <Card>
+          <CardHeader><CardTitle>Dead Stock Watchlist (90+ Days)</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {data.deadStock.map((item, i) => (
+                <div key={i} className="flex items-center justify-between border-l-4 border-destructive bg-destructive/5 p-3 rounded-r-md">
+                  <div>
+                    <p className="font-medium">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">{item.days} days unsold</p>
+                  </div>
+                  <span className="font-bold text-sm">{item.stock} units</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
 }
 </file>
 
@@ -8556,6 +9098,10 @@ build/
 temp/
 </file>
 
+<file path=".repomixignore">
+/Users/saklinemuttakeenshaan/Desktop/BookLedger/CLAUDE.md
+</file>
+
 <file path="Backend/Brevo/Brevoemail.js">
 // import express from 'express';
 import axios from 'axios';
@@ -9241,6 +9787,146 @@ const PricingSection = () => {
 export default PricingSection;
 </file>
 
+<file path="Frontend/src/components/layout/AppSidebar.jsx">
+import { Link, useLocation } from "react-router"; // or "react-router-dom"
+import useAuthStore from "@/store/authStore";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
+  SidebarRail,
+} from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Settings, HelpCircle, LogOut, BookOpen } from "lucide-react";
+import { getMenuItemsByRole, getQuickAccessByRole } from "@/config/menuConfig";
+
+export function AppSidebar({ ...props }) {
+  const { user, logout } = useAuthStore();
+  const location = useLocation();
+  const pathname = location.pathname;
+
+  // Safety fallback
+  const userRole = user?.role || "Cashier";
+  const menuItems = getMenuItemsByRole(userRole);
+  const quickAccessItems = getQuickAccessByRole(userRole);
+
+  return (
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <Link to="/dashboard">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <BookOpen className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">BookLedger</span>
+                  <span className="truncate text-xs">Enterprise</span>
+                </div>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      
+      <SidebarContent>
+        {/* Main Menu */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {menuItems.map((item) => (
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={pathname === item.path}
+                    tooltip={item.label}
+                  >
+                    <Link to={item.path}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Quick Access */}
+        {quickAccessItems.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Quick Access</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {quickAccessItems.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={pathname === item.path}
+                      tooltip={item.label}
+                    >
+                      <Link to={item.path}>
+                        <item.icon />
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+             <SidebarMenuButton asChild tooltip="Settings">
+                <Link to="/dashboard/settings">
+                  <Settings />
+                  <span>Settings</span>
+                </Link>
+             </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <div className="flex items-center gap-2 p-2 mt-2 border-t border-sidebar-border">
+              <Avatar className="h-8 w-8 rounded-lg">
+                <AvatarFallback className="rounded-lg">
+                  {user?.name?.slice(0, 2).toUpperCase() || "US"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">{user?.name}</span>
+                <span className="truncate text-xs text-muted-foreground">{userRole}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="ml-auto h-8 w-8 hover:text-destructive"
+                onClick={logout}
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
+  );
+}
+</file>
+
 <file path="Frontend/src/components/layout/Footer.jsx">
 import { Book, Mail, MapPin, Phone } from 'lucide-react';
 import { FaXTwitter, FaLinkedinIn, FaGithub, FaInstagram } from 'react-icons/fa6';
@@ -9359,6 +10045,110 @@ const Footer = () => {
 };
 
 export default Footer;
+</file>
+
+<file path="Frontend/src/data/dashboardData.js">
+export const adminDashboardData = {
+  stats: {
+    todaySales: { value: 45, change: 12, trend: "up" },
+    todayRevenue: { value: 2450.0, change: 8, trend: "up" },
+    booksSold: { value: 156, change: 5, trend: "up" },
+    activeCustomers: { value: 342, change: 2, trend: "up" },
+  },
+  salesTrend: [
+    { date: "Mon", sales: 1200 },
+    { date: "Tue", sales: 1450 },
+    { date: "Wed", sales: 1380 },
+    { date: "Thu", sales: 1620 },
+    { date: "Fri", sales: 1550 },
+    { date: "Sat", sales: 1890 },
+    { date: "Sun", sales: 2450 },
+  ],
+  topBooks: [
+    { title: "The Great Gatsby", sales: 45, revenue: 674.55 },
+    { title: "1984", sales: 38, revenue: 645.62 },
+    { title: "To Kill a Mockingbird", sales: 32, revenue: 479.68 },
+    { title: "Harry Potter", sales: 25, revenue: 549.75 },
+  ],
+  recentTransactions: [
+    { id: "1234", amount: 45.99, time: "2m ago", cashier: "John D." },
+    { id: "1235", amount: 28.5, time: "5m ago", cashier: "Jane S." },
+    { id: "1236", amount: 156.0, time: "12m ago", cashier: "John D." },
+    { id: "1237", amount: 89.99, time: "18m ago", cashier: "Mike W." },
+  ],
+  inventoryAlerts: {
+    outOfStock: 12,
+    lowStock: 23,
+    needReorder: 8,
+    deadStock: 5,
+  },
+};
+
+// ... existing adminDashboardData ...
+
+export const managerDashboardData = {
+  stats: {
+    revenue: { value: 12450.0, change: 8, trend: "up" },
+    weeklySales: { value: 45600.0, change: 12, trend: "up" },
+    inventoryCount: { value: 1240, change: -5, trend: "down" },
+    lowStock: { value: 23, change: 2, trend: "up" },
+  },
+  salesByCategory: [
+    { name: "Fiction", value: 45 },
+    { name: "Non-Fiction", value: 30 },
+    { name: "Sci-Fi", value: 15 },
+    { name: "Mystery", value: 10 },
+  ],
+  deadStock: [
+    { title: "Old Textbooks 2020", days: 120, stock: 45 },
+    { title: "Travel Guides 2021", days: 95, stock: 12 },
+    { title: "Legacy DVD Sets", days: 300, stock: 8 },
+  ],
+};
+
+export const cashierDashboardData = {
+  stats: {
+    mySales: { value: 28, change: 5, trend: "up" },
+    myRevenue: { value: 456.8, change: 12, trend: "up" },
+    avgSale: { value: 38.07, change: 2, trend: "up" },
+  },
+  recentSales: [
+    { id: "1240", time: "2m ago", total: 45.99, items: 2 },
+    { id: "1239", time: "15m ago", total: 12.5, items: 1 },
+    { id: "1238", time: "32m ago", total: 156.0, items: 5 },
+  ],
+  hourlyPerformance: [
+    { time: "9am", sales: 120 },
+    { time: "10am", sales: 250 },
+    { time: "11am", sales: 180 },
+    { time: "12pm", sales: 450 }, // Peak
+    { time: "1pm", sales: 300 },
+  ],
+};
+</file>
+
+<file path="Frontend/src/pages/dashboard/DashboardMain.jsx">
+import useAuthStore from "@/store/authStore";
+import AdminDashboard from "./AdminDashboard";
+import ManagerDashboard from "./ManagerDashboard"; 
+import CashierDashboard from "./CashierDashboard"; 
+
+export default function DashboardMain() {
+  const { user } = useAuthStore();
+  const role = user?.role;
+
+  // Render based on Role
+  if (role === 'Admin') return <AdminDashboard />;
+  if (role === 'Manager') return <ManagerDashboard />;
+  if (role === 'Cashier') return <CashierDashboard />;
+
+  // Fallback
+  return (
+    <div className="flex items-center justify-center h-[50vh] text-muted-foreground">
+      Unauthorized: No valid role assigned.
+    </div>
+  );
+}
 </file>
 
 <file path="Frontend/src/pages/DashboardPage.jsx">
@@ -12092,64 +12882,6 @@ const Navbar = () => {
 export default Navbar;
 </file>
 
-<file path="Frontend/src/routes/Router.jsx">
-import React from 'react';
-import { createBrowserRouter } from 'react-router';
-import RootLayout from '@/layouts/RootLayout';
-import Landing from '@/pages/Landing';
-import AboutPage from '@/pages/AboutPage';
-import AuthLayout from '@/layouts/AuthLayout';
-import LoginPage from '@/pages/LoginPage';
-import VerifyEmailPage from '@/pages/VerifyEmailPage';
-import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
-import ResetPasswordPage from '@/pages/ResetPasswordPage';
-import DashboardPage from '@/pages/DashboardPage';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-
-const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <RootLayout />,
-    children: [
-      { index: true, element: <Landing /> },
-      { path: 'about', element: <AboutPage /> },
-    ],
-  },
-  {
-    path: '/auth',
-    element: <AuthLayout />,
-    children: [
-      {
-        path: 'login',
-        element: <LoginPage />,
-      },
-      {
-        path: 'verify-email',
-        element: <VerifyEmailPage />,
-      },
-      {
-        path: 'forgot-password',
-        element: <ForgotPasswordPage />,
-      },
-      {
-        path: 'reset-password/:token',
-        element: <ResetPasswordPage />,
-      },
-    ],
-  },
-  {
-    path: '/dashboard',
-    element: (
-      <ProtectedRoute>
-        <DashboardPage />
-      </ProtectedRoute>
-    ),
-  },
-]);
-
-export default router;
-</file>
-
 <file path="Frontend/src/App.jsx">
 import { useEffect } from 'react';
 import { RouterProvider } from 'react-router';
@@ -12563,6 +13295,105 @@ section {
 }
 </file>
 
+<file path="Frontend/src/routes/Router.jsx">
+import { createBrowserRouter } from "react-router";
+
+// Layouts
+import RootLayout from "@/layouts/RootLayout";
+import AuthLayout from "@/layouts/AuthLayout";
+import DashboardLayout from "@/layouts/DashboardLayout";
+
+// Pages
+import Landing from "@/pages/Landing";
+import LoginPage from "@/pages/LoginPage";
+// import SignupPage from "@/pages/auth/SignupPage";
+import VerifyEmailPage from "@/pages/VerifyEmailPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
+
+// Dashboard Pages
+import DashboardMain from "@/pages/dashboard/DashboardMain";
+
+// Protection
+import ProtectedRoute from "@/components/auth/ProtectedRoute"; // Ensure this path is correct for your project
+import RedirectAuthenticatedUser from "@/components/auth/RedirectAuthenticatedUser"; // Ensure this path is correct
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <RootLayout />,
+    children: [
+      { index: true, element: <Landing /> },
+
+      // Auth Routes
+      {
+        path: "login",
+        element: (
+          <RedirectAuthenticatedUser>
+            <AuthLayout>
+              <LoginPage />
+            </AuthLayout>
+          </RedirectAuthenticatedUser>
+        ),
+      },
+      // {
+      //   path: "signup",
+      //   element: (
+      //     <RedirectAuthenticatedUser>
+      //       <AuthLayout>
+      //         <LoginPage />
+      //       </AuthLayout>
+      //     </RedirectAuthenticatedUser>
+      //   ),
+      // },
+      {
+        path: "verify-email",
+        element: <VerifyEmailPage />,
+      },
+      {
+        path: "forgot-password",
+        element: (
+          <RedirectAuthenticatedUser>
+            <AuthLayout>
+              <ForgotPasswordPage />
+            </AuthLayout>
+          </RedirectAuthenticatedUser>
+        ),
+      },
+      {
+        path: "reset-password/:token",
+        element: (
+          <RedirectAuthenticatedUser>
+            <AuthLayout>
+              <ResetPasswordPage />
+            </AuthLayout>
+          </RedirectAuthenticatedUser>
+        ),
+      },
+
+      // Dashboard Routes (New Implementation)
+      {
+        path: "dashboard",
+        element: (
+          <ProtectedRoute>
+            <DashboardLayout />
+          </ProtectedRoute>
+        ),
+        children: [
+          {
+            index: true,
+            element: <DashboardMain />,
+          },
+          // Future routes (Books, Sales, etc.) will go here
+        ],
+      },
+    ],
+  },
+]);
+
+export default router;
+</file>
+
 <file path="Frontend/package.json">
 {
   "name": "bookledger",
@@ -12580,6 +13411,7 @@ section {
     "axios": "^1.13.5",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.33.0",
     "lucide-react": "^0.563.0",
     "radix-ui": "^1.4.3",
@@ -12590,6 +13422,7 @@ section {
     "react-icons": "^5.5.0",
     "react-intersection-observer": "^10.0.2",
     "react-router": "^7.13.0",
+    "recharts": "^3.7.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
     "zustand": "^5.0.11"

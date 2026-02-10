@@ -1,4 +1,4 @@
-import { Outlet } from "react-router";
+import { Outlet } from "react-router"; // or "react-router-dom"
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import {
   SidebarInset,
@@ -16,7 +16,6 @@ export default function DashboardLayout() {
           <SidebarTrigger className="-ml-1" />
           <Separator orientation="vertical" className="mr-2 h-4" />
           <div className="flex-1">
-             {/* Breadcrumbs can go here later */}
              <span className="text-sm font-medium">Dashboard</span>
           </div>
         </header>
