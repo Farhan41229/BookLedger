@@ -28,8 +28,15 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Initialize database connection
-connectDB();
+// Ensure DB is connected before handling any API request
+app.use("/api", async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    res.status(503).json({ success: false, message: "Database unavailable" });
+  }
+});
 
 // API Routes
 app.use("/api/users", userRoutes);
