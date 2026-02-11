@@ -1,15 +1,15 @@
-import axios from 'axios';
+import axios from "axios";
 
 const API = axios.create({
-  baseURL: 'http://localhost:4000/api',
+  baseURL: "https://bookledger-phi.vercel.app/api",
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
