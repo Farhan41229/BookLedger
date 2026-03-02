@@ -7,6 +7,7 @@ import {
   getBookById,
   updateBook,
   deleteBook,
+  recommendBooks,
 } from "../controller/bookController.js";
 
 const router = express.Router();
@@ -15,6 +16,7 @@ const router = express.Router();
 router.get("/", getAllBooks);
 router.get("/search", searchBooks);
 router.get("/:id", getBookById);
+router.post("/recommend", recommendBooks);
 
 // Protected routes (Manager/Admin only)
 router.post(

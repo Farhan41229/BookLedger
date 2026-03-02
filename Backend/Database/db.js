@@ -1,14 +1,24 @@
 import mongoose from "mongoose";
 
-export const connectDB =  () => {
-    mongoose.connect(process.env.MONGODB_URL,{
-        dbName: "MERN_LMS"
-    }
+let cached = null;
 
-    ).then(()=>{
-        console.log("Database connected successfully");
+export const connectDB = async () => {
+  if (cached) {
+    return cached;
+  }
+
+  cached = mongoose
+    .connect(process.env.MONGODB_URL, {
+      dbName: "MERN_LMS",
     })
-    .catch((err)=>{
-        console.log("Database connection failed", err);
+    .then(() => {
+      console.log("Database connected successfully");
+    })
+    .catch((err) => {
+      cached = null;
+      console.log("Database connection failed", err);
+      throw err;
     });
-}
+
+  return cached;
+};
