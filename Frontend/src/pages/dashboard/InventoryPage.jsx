@@ -44,9 +44,9 @@ const InventoryPage = () => {
   }, []);
 
   // Derived Metrics
-  const lowStockItems = inventory.filter(item => item.stock <= item.reorderLevel);
-  const totalItems = inventory.reduce((acc, item) => acc + item.stock, 0);
-  const totalValue = inventory.reduce((acc, item) => acc + (item.stock * item.price), 0);
+  const lowStockItems = inventory.filter(item => item.stockQuantity <= item.reorderLevel);
+  const totalItems = inventory.reduce((acc, item) => acc + item.stockQuantity, 0);
+  const totalValue = inventory.reduce((acc, item) => acc + (item.stockQuantity * item.price), 0);
 
   return (
     <div className="space-y-6 fade-in p-2">
