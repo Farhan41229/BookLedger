@@ -2,9 +2,16 @@ import { applyDeadStockPricing, clearExpiredDiscounts } from "../services/pricin
 import { getAuditLogs } from "../services/auditService.js";
 
 /**
- * Apply dead stock pricing
+ * Identifies dead stock books (not sold in 90+ days) and applies a 20% discount.
  * POST /pricing/apply-discount
- * Admin/Manager only
+ * 
+ * @param {Object} req - The Express request object. Requires `req.user._id` for the audit log.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response detailing success, message, and the list of discounted books.
+ * 
+ * @example
+ * // Access Control: Admin/Manager only
  */
 export const applyDeadStockDiscount = async (req, res, next) => {
   try {
@@ -17,9 +24,16 @@ export const applyDeadStockDiscount = async (req, res, next) => {
 };
 
 /**
- * Clear expired discounts
+ * Clears expired or active dynamic discounts across all books.
  * POST /pricing/clear-discount
- * Admin/Manager only
+ * 
+ * @param {Object} req - The Express request object. Requires `req.user._id` for the audit log.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response detailing success, message, and the list of cleared books.
+ * 
+ * @example
+ * // Access Control: Admin/Manager only
  */
 export const clearDiscounts = async (req, res, next) => {
   try {
@@ -32,9 +46,17 @@ export const clearDiscounts = async (req, res, next) => {
 };
 
 /**
- * Get audit logs
+ * Retrieves audit logs with optional filtering and pagination.
  * GET /audit
- * Admin only
+ * 
+ * @param {Object} req - The Express request object containing query parameters.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with the success status, paginated audit logs, and pagination details.
+ * 
+ * @example
+ * // Request: GET /audit?page=1&limit=50&action=Delete&targetCollection=Book
+ * // Access Control: Admin only
  */
 export const getAuditLogsHandler = async (req, res, next) => {
   try {

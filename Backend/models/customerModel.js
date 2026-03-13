@@ -1,5 +1,24 @@
 import mongoose from "mongoose";
 
+/**
+ * @typedef {Object} PurchaseHistoryItem
+ * @property {mongoose.Schema.Types.ObjectId} saleId - Reference to the Sale document.
+ * @property {Number} totalAmount - Total amount spent in this specific sale.
+ * @property {Date} purchaseDate - The date and time the purchase was made.
+ */
+
+/**
+ * @typedef {Object} Customer
+ * @property {String} name - The full name of the customer.
+ * @property {Number} membershipPts - Loyalty points accumulated from purchases.
+ * @property {Number} readerScore - A calculated score based on reading habits/purchases.
+ * @property {PurchaseHistoryItem[]} purchaseHistory - Array of past purchases made by the customer.
+ */
+
+/**
+ * Schema representing a bookstore customer, including loyalty points and purchase history.
+ * @type {mongoose.Schema<Customer>}
+ */
 const customerSchema = new mongoose.Schema(
   {
     name: {

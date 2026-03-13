@@ -1,8 +1,15 @@
 import { Book } from "../models/bookModel.js";
 
 /**
- * Get reorder list (all books below reorder level)
+ * Retrieves a paginated list of all books whose stock quantity has fallen below their specific reorder level.
  * GET /inventory/reorder
+ * 
+ * @param {Object} req - The Express request object containing pagination query params.
+ * @param {String} [req.query.page=1] - The page number to retrieve.
+ * @param {String} [req.query.limit=10] - Number of items per page.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with the list of books needing reorder and the calculated quantity needed.
  */
 export const getReorderList = async (req, res, next) => {
   try {
@@ -44,8 +51,13 @@ export const getReorderList = async (req, res, next) => {
 };
 
 /**
- * Get inventory status
+ * Retrieves a high-level summary of the entire bookstore inventory status.
  * GET /inventory/status
+ * 
+ * @param {Object} req - The Express request object.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response containing counts for total, in-stock, out-of-stock, below-reorder books, and the total monetary value of the inventory.
  */
 export const getInventoryStatus = async (req, res, next) => {
   try {
@@ -83,8 +95,16 @@ export const getInventoryStatus = async (req, res, next) => {
 };
 
 /**
- * Get low stock books
+ * Retrieves a paginated list of books with stock quantity below a specified custom threshold.
  * GET /inventory/low-stock
+ * 
+ * @param {Object} req - The Express request object containing query params.
+ * @param {String} [req.query.page=1] - The page number to retrieve.
+ * @param {String} [req.query.limit=10] - Number of items per page.
+ * @param {String|Number} [req.query.threshold=10] - The stock threshold to check against.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response containing the low-stock books.
  */
 export const getLowStockBooks = async (req, res, next) => {
   try {
@@ -119,8 +139,13 @@ export const getLowStockBooks = async (req, res, next) => {
 };
 
 /**
- * Get inventory report
+ * Generates a comprehensive inventory report calculating various metrics.
  * GET /inventory/report
+ * 
+ * @param {Object} req - The Express request object.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response containing the full report and the analyzed book data.
  */
 export const getInventoryReport = async (req, res, next) => {
   try {

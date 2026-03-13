@@ -16,8 +16,13 @@ import {
 import crypto from 'crypto';
 
 /**
- * Get current authenticated user
+ * Retrieves the profile information of the currently authenticated user.
  * GET /users/me
+ * 
+ * @param {Object} req - The Express request object containing the authenticated user in `req.user`.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with the current user's details.
  */
 export const getMe = async (req, res, next) => {
   try {
@@ -36,8 +41,21 @@ export const getMe = async (req, res, next) => {
 };
 
 /**
- * Register a new user (Admin only)
+ * Registers a new system user such as an Admin, Manager, or Cashier.
  * POST /users/register
+ *
+ * @param {Object} req - The Express request object.
+ * @param {Object} req.body - The request body.
+ * @param {String} req.body.name - The new user's name.
+ * @param {String} req.body.email - The new user's email.
+ * @param {String} req.body.password - The new user's password.
+ * @param {String} req.body.role - The user's role (Admin, Manager, Cashier).
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response confirming registration and initiates email verification.
+ * 
+ * @example
+ * // Access Control: Admin only
  */
 export const registerUser = async (req, res, next) => {
   try {
@@ -109,8 +127,16 @@ export const registerUser = async (req, res, next) => {
 };
 
 /**
- * Login user
+ * Authenticates a user and issues a JWT token for session management.
  * POST /users/login
+ * 
+ * @param {Object} req - The Express request object.
+ * @param {Object} req.body - The request body.
+ * @param {String} req.body.email - The user's email.
+ * @param {String} req.body.password - The user's password.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with the JWT token and user profile on success.
  */
 export const loginUser = async (req, res, next) => {
   try {
@@ -167,8 +193,18 @@ export const loginUser = async (req, res, next) => {
 
 // ... Rest of your functions (getAllUsers, getUserById, updateUser, deleteUser, verifyEmail, resendVerificationCode, forgotPassword, resetPassword) remain the same.
 /**
- * Get all users (Admin only)
+ * Retrieves a paginated list of all system users.
  * GET /users
+ * 
+ * @param {Object} req - The Express request object containing pagination parameters.
+ * @param {String} [req.query.page=1] - The page number to retrieve.
+ * @param {String} [req.query.limit=10] - Number of items per page.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with the list of users and pagination details.
+ * 
+ * @example
+ * // Access Control: Admin only
  */
 export const getAllUsers = async (req, res, next) => {
   try {
@@ -200,8 +236,14 @@ export const getAllUsers = async (req, res, next) => {
 };
 
 /**
- * Get user by ID
+ * Retrieves details for a specific user by their ID.
  * GET /users/:id
+ * 
+ * @param {Object} req - The Express request object.
+ * @param {String} req.params.id - The unique MongoDB ObjectId of the user.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with the user details (excluding password).
  */
 export const getUserById = async (req, res, next) => {
   try {
@@ -224,8 +266,18 @@ export const getUserById = async (req, res, next) => {
 };
 
 /**
- * Update user (Admin only)
+ * Updates an existing user's profile and logs the action in the audit trail.
  * PUT /users/:id
+ * 
+ * @param {Object} req - The Express request object.
+ * @param {String} req.params.id - The unique MongoDB ObjectId of the user to update.
+ * @param {Object} req.body - The request body with updated fields (name, email, role).
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with the updated user details.
+ * 
+ * @example
+ * // Access Control: Admin only
  */
 export const updateUser = async (req, res, next) => {
   try {
@@ -283,8 +335,17 @@ export const updateUser = async (req, res, next) => {
 };
 
 /**
- * Delete user (Admin only)
+ * Deletes a user from the system and logs the deletion in the audit trail.
  * DELETE /users/:id
+ * 
+ * @param {Object} req - The Express request object.
+ * @param {String} req.params.id - The unique MongoDB ObjectId of the user to delete.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response confirming successful deletion.
+ * 
+ * @example
+ * // Access Control: Admin only
  */
 export const deleteUser = async (req, res, next) => {
   try {
@@ -321,8 +382,16 @@ export const deleteUser = async (req, res, next) => {
 };
 
 /**
- * Verify email with verification code
+ * Verifies a user's email using the provided code.
  * POST /users/verify-email
+ * 
+ * @param {Object} req - The Express request object.
+ * @param {Object} req.body - The request body.
+ * @param {String} req.body.email - The user's email to verify.
+ * @param {String} req.body.code - The verification code sent to the email.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response confirming successful verification.
  */
 export const verifyEmail = async (req, res, next) => {
   try {
@@ -408,8 +477,15 @@ export const verifyEmail = async (req, res, next) => {
 };
 
 /**
- * Resend verification code
+ * Resends a new verification code to the user's email.
  * POST /users/resend-verification-code
+ * 
+ * @param {Object} req - The Express request object.
+ * @param {Object} req.body - The request body.
+ * @param {String} req.body.email - The user's email address.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response confirming the new verification code was sent.
  */
 export const resendVerificationCode = async (req, res, next) => {
   try {
@@ -472,8 +548,15 @@ export const resendVerificationCode = async (req, res, next) => {
 };
 
 /**
- * Forgot Password - Send reset email
+ * Initiates the password reset flow by sending an email with a reset link.
  * POST /users/forgot-password
+ * 
+ * @param {Object} req - The Express request object.
+ * @param {Object} req.body - The request body.
+ * @param {String} req.body.email - The email address associated with the account.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response confirming the reset email was sent.
  */
 export const forgotPassword = async (req, res, next) => {
   try {
@@ -518,8 +601,16 @@ export const forgotPassword = async (req, res, next) => {
 };
 
 /**
- * Reset Password
+ * Completes the password reset process by hashing and saving the new password.
  * POST /users/reset-password/:token
+ * 
+ * @param {Object} req - The Express request object.
+ * @param {String} req.params.token - The password reset token from the URL.
+ * @param {Object} req.body - The request body.
+ * @param {String} req.body.password - The new password.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response confirming the password was reset successfully.
  */
 export const resetPassword = async (req, res, next) => {
   try {

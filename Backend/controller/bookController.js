@@ -4,8 +4,15 @@ import { getEffectivePrice } from "../services/pricingService.js";
 import { generateAIText } from "../config/GeminiSetup.js";
 
 /**
- * AI-powered book recommendation for guests
+ * Uses Gemini AI to recommend a list of books based on a user's natural language input.
  * POST /books/recommend
+ * 
+ * @param {Object} req - The Express request object.
+ * @param {Object} req.body - The request body containing the search query.
+ * @param {String} req.body.message - The natural language message/prompt from the user.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with status 200 containing the recommended books array and count.
  */
 export const recommendBooks = async (req, res, next) => {
   try {
@@ -113,8 +120,24 @@ Respond with ONLY one of the three formats above. No explanation, no extra text.
 };
 
 /**
- * Create a new book (Manager/Admin only)
+ * Creates a new book in the inventory system.
  * POST /books
+ * 
+ * @param {Object} req - The Express request object.
+ * @param {Object} req.body - The request body representing the new book.
+ * @param {String} req.body.title - The title of the book.
+ * @param {String} req.body.author - The author of the book.
+ * @param {String} [req.body.genre] - The genre of the book.
+ * @param {String} req.body.isbn - The ISBN.
+ * @param {Number} req.body.price - The base price.
+ * @param {Number} req.body.stockQuantity - Initial stock amount.
+ * @param {Number} req.body.reorderLevel - Level at which stock should be reordered.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with status 201 containing the newly created book.
+ * 
+ * @example
+ * // Access Control: Manager/Admin only
  */
 export const createBook = async (req, res, next) => {
   try {
@@ -179,8 +202,15 @@ export const createBook = async (req, res, next) => {
 };
 
 /**
- * Get all books with pagination
+ * Retrieves a paginated list of all books, including their effective (discounted) pricing.
  * GET /books
+ * 
+ * @param {Object} req - The Express request object containing pagination query params.
+ * @param {String} [req.query.page=1] - The page number to retrieve.
+ * @param {String} [req.query.limit=10] - Number of items per page.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with an array of books and pagination details.
  */
 export const getAllBooks = async (req, res, next) => {
   try {
@@ -220,16 +250,22 @@ export const getAllBooks = async (req, res, next) => {
 };
 
 /**
- * Search books with filtering
+ * Searches and filters books based on various query parameters.
  * GET /books/search
  *
- * Query params:
- * - title: partial, case-insensitive
- * - author: exact match
- * - genre: exact match
- * - isbn: exact match
- * - minPrice / maxPrice: range filter
- * - availability: inStock | outOfStock
+ * @param {Object} req - The Express request object.
+ * @param {String} [req.query.title] - Partial, case-insensitive title search.
+ * @param {String} [req.query.author] - Exact author match.
+ * @param {String} [req.query.genre] - Exact genre match.
+ * @param {String} [req.query.isbn] - Exact ISBN match.
+ * @param {String|Number} [req.query.minPrice] - Minimum price filter.
+ * @param {String|Number} [req.query.maxPrice] - Maximum price filter.
+ * @param {String} [req.query.availability] - 'inStock' or 'outOfStock' filter.
+ * @param {String} [req.query.page=1] - Pagination page.
+ * @param {String} [req.query.limit=10] - Pagination limit.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with filtered books and pagination details.
  */
 export const searchBooks = async (req, res, next) => {
   try {
@@ -299,8 +335,14 @@ export const searchBooks = async (req, res, next) => {
 };
 
 /**
- * Get book by ID
+ * Retrieves a single book by its MongoDB ObjectId.
  * GET /books/:id
+ * 
+ * @param {Object} req - The Express request object containing the book ID in params.
+ * @param {String} req.params.id - The unique MongoDB ObjectId of the book.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with the book object.
  */
 export const getBookById = async (req, res, next) => {
   try {
@@ -329,8 +371,18 @@ export const getBookById = async (req, res, next) => {
 };
 
 /**
- * Update book (Manager/Admin only)
+ * Updates an existing book and creates an audit log of the changes.
  * PUT /books/:id
+ * 
+ * @param {Object} req - The Express request object containing updated fields in body.
+ * @param {String} req.params.id - The ID of the book to update.
+ * @param {Object} req.body - The fields to update (title, author, genre, price, stockQuantity, reorderLevel).
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with the updated book object.
+ * 
+ * @example
+ * // Access Control: Manager/Admin only
  */
 export const updateBook = async (req, res, next) => {
   try {
@@ -398,8 +450,17 @@ export const updateBook = async (req, res, next) => {
 };
 
 /**
- * Delete book (Manager/Admin only)
+ * Deletes a book from the system and generates an audit log.
  * DELETE /books/:id
+ * 
+ * @param {Object} req - The Express request object containing the book ID.
+ * @param {String} req.params.id - The ID of the book to delete.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response confirming successful deletion.
+ * 
+ * @example
+ * // Access Control: Manager/Admin only
  */
 export const deleteBook = async (req, res, next) => {
   try {

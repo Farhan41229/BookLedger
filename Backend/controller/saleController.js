@@ -4,22 +4,18 @@ import { getEffectivePrice } from "../services/pricingService.js";
 import { Book } from "../models/bookModel.js";
 
 /**
- * Create a sale (Checkout)
+ * Processes a point-of-sale checkout, creating a sale transaction and atomically updating inventory and customer points.
  * POST /sales
  *
- * Request body:
- * {
- *   "cashierId": "user_id",
- *   "customerId": "customer_id_optional",
- *   "items": [
- *     {
- *       "bookId": "book_id",
- *       "quantity": 2,
- *       "unitPrice": 29.99
- *     }
- *   ],
- *   "totalAmount": 59.98
- * }
+ * @param {Object} req - The Express request object.
+ * @param {Object} req.body - The request body containing checkout data.
+ * @param {String} [req.body.cashierId] - ID of the cashier (defaults to `req.user._id` from auth token).
+ * @param {String} [req.body.customerId] - Optional ID of the customer for loyalty points.
+ * @param {Array<{bookId: String, quantity: Number, unitPrice: Number}>} req.body.items - Array of books sold.
+ * @param {Number} req.body.totalAmount - The total cost of the transaction.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with status 201 containing the completed sale transaction details.
  */
 export const createSale = async (req, res, next) => {
   try {
@@ -64,8 +60,18 @@ export const createSale = async (req, res, next) => {
 };
 
 /**
- * Get all sales (Manager/Admin only)
+ * Retrieves a paginated list of all sales transactions with populated references.
  * GET /sales
+ * 
+ * @param {Object} req - The Express request object containing pagination query params.
+ * @param {String} [req.query.page=1] - The page number to retrieve.
+ * @param {String} [req.query.limit=10] - Number of items per page.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with populated sales and pagination details.
+ * 
+ * @example
+ * // Access Control: Manager/Admin only
  */
 export const getAllSales = async (req, res, next) => {
   try {
@@ -99,8 +105,14 @@ export const getAllSales = async (req, res, next) => {
 };
 
 /**
- * Get sale by ID
+ * Retrieves details for a specific sale transaction by its ID.
  * GET /sales/:id
+ * 
+ * @param {Object} req - The Express request object containing the sale ID.
+ * @param {String} req.params.id - The unique MongoDB ObjectId of the sale.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with the populated sale details.
  */
 export const getSaleById = async (req, res, next) => {
   try {
@@ -126,8 +138,16 @@ export const getSaleById = async (req, res, next) => {
 };
 
 /**
- * Get sales by customer
+ * Retrieves a paginated list of sales transactions for a specific customer.
  * GET /sales/customer/:customerId
+ * 
+ * @param {Object} req - The Express request object.
+ * @param {String} req.params.customerId - The unique MongoDB ObjectId of the customer.
+ * @param {String} [req.query.page=1] - The page number to retrieve.
+ * @param {String} [req.query.limit=10] - Number of items per page.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with the customer's sales history.
  */
 export const getSalesByCustomer = async (req, res, next) => {
   try {
@@ -162,12 +182,18 @@ export const getSalesByCustomer = async (req, res, next) => {
 };
 
 /**
- * Get sales report (Admin/Manager only)
+ * Generates an aggregated sales report summarizing revenue, transaction counts, and books sold over an optional date range.
  * GET /sales/reports/summary
  *
- * Query params:
- * - startDate: ISO date string
- * - endDate: ISO date string
+ * @param {Object} req - The Express request object containing date string query parameters.
+ * @param {String} [req.query.startDate] - ISO date string for start of period.
+ * @param {String} [req.query.endDate] - ISO date string for end of period.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with the calculated sales report.
+ * 
+ * @example
+ * // Access Control: Manager/Admin only
  */
 export const getSalesReport = async (req, res, next) => {
   try {
@@ -218,8 +244,17 @@ export const getSalesReport = async (req, res, next) => {
 };
 
 /**
- * Cancel a sale (Admin only)
+ * Cancels a completed sale, restoring the inventory stock quantities and updating the sale status.
  * DELETE /sales/:id
+ * 
+ * @param {Object} req - The Express request object containing the sale ID.
+ * @param {String} req.params.id - The ID of the sale to cancel.
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response confirming the cancellation.
+ * 
+ * @example
+ * // Access Control: Admin only
  */
 export const cancelSale = async (req, res, next) => {
   try {

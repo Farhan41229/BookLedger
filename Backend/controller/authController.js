@@ -3,7 +3,19 @@ import {user} from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { catchAsyncError } from "../middlewares/catchAsyncError.js";
-
+/**
+ * Registers a new employee user in the system.
+ * POST /api/users/register (example route)
+ * 
+ * @param {Object} req - The Express request object.
+ * @param {Object} req.body - The request body.
+ * @param {String} req.body.name - The full name of the employee.
+ * @param {String} req.body.email - The unique email address to register.
+ * @param {String} req.body.password - The desired password (must be between 8 and 16 characters).
+ * @param {Object} res - The Express response object.
+ * @param {Function} next - The next middleware function for error handling.
+ * @returns {Promise<void>} Sends a JSON response with status 201 on success, including the new user object (minus password).
+ */
 export const register= catchAsyncError (async (req, res, next) => {
     try{
         const {name, email, password}= req.body;

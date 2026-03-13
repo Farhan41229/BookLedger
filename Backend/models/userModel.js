@@ -1,5 +1,22 @@
 import mongoose from 'mongoose';
 
+/**
+ * @typedef {Object} User
+ * @property {String} name - Full name of the employee.
+ * @property {String} email - Unique email address used for login.
+ * @property {String} password - Hashed password for authentication (hidden by default).
+ * @property {String} role - Access level role ('Admin', 'Manager', 'Cashier').
+ * @property {Number} [verificationToken] - OTP or token used for email verification.
+ * @property {Date} [verificationTokenExpiry] - Expiration time for the verification token.
+ * @property {Boolean} isEmailVerified - Indicates whether the user has verified their email address.
+ * @property {String} [resetPasswordToken] - Token used for password reset flows.
+ * @property {Date} [resetPasswordExpiry] - Expiration time for the password reset token.
+ */
+
+/**
+ * Schema representing an employee user of the system with role-based access control.
+ * @type {mongoose.Schema<User>}
+ */
 const userSchema = new mongoose.Schema(
   {
     name: {

@@ -1,5 +1,22 @@
 import mongoose from "mongoose";
 
+/**
+ * @typedef {Object} Book
+ * @property {String} title - The title of the book.
+ * @property {String} author - The author of the book.
+ * @property {String} [genre] - The genre of the book.
+ * @property {String} isbn - The unique ISBN identifier for the book.
+ * @property {Number} price - The standard selling price of the book.
+ * @property {Number} [discountedPrice] - The active discounted price (e.g., for dead stock).
+ * @property {Number} stockQuantity - The current available stock quantity.
+ * @property {Number} reorderLevel - The threshold quantity at which to reorder more stock.
+ * @property {Date} [lastSoldDate] - Date the book was most recently sold.
+ */
+
+/**
+ * Schema representing a book inventory item with pricing, stock, and dead-stock tracking.
+ * @type {mongoose.Schema<Book>}
+ */
 const bookSchema = new mongoose.Schema(
   {
     title: {
