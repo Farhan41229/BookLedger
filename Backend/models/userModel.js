@@ -24,8 +24,8 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: {
-        values: ['Admin', 'Manager', 'Cashier'],
-        message: 'Invalid role. Must be Admin, Manager, or Cashier',
+        values: ['Admin', 'Manager', 'Cashier', 'Customer'],
+        message: 'Invalid role. Must be Admin, Manager, Cashier, or Customer',
       },
       required: [true, 'Please specify a role'],
     },

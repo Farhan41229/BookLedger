@@ -2,6 +2,7 @@ import express from "express";
 import { authenticate, authorize } from "../middlewares/authMiddleware.js";
 import {
   registerUser,
+  registerCustomer,
   loginUser,
   getAllUsers,
   getUserById,
@@ -18,6 +19,7 @@ const router = express.Router();
 
 // Public routes
 router.post("/login", loginUser);
+router.post("/register-customer", registerCustomer);
 router.post("/forgot-password", forgotPassword); // Moved to its own line
 router.post("/reset-password/:token", resetPassword); // Moved to its own line
 router.post("/verify-email", verifyEmail);                      // Added route

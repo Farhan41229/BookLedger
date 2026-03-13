@@ -7,15 +7,16 @@ import {
   getSalesByCustomer,
   getSalesReport,
   cancelSale,
+  getMyOrders,
 } from "../controller/saleController.js";
 
 const router = express.Router();
 
-// Cashier - can create sales
+// Cashier and Customer - can create sales
 router.post(
   "/",
   authenticate,
-  authorize(["Cashier", "Manager", "Admin"]),
+  authorize(["Cashier", "Manager", "Admin", "Customer"]),
   createSale
 );
 
@@ -45,9 +46,16 @@ router.get(
 
 // Get sales by customer
 router.get(
+  "/my-orders",
+  authenticate,
+  authorize(["Customer"]),
+  getMyOrders
+);
+
+router.get(
   "/customer/:customerId",
   authenticate,
-  authorize(["Manager", "Admin"]),
+  authorize(["Manager", "Admin", "Customer"]),
   getSalesByCustomer
 );
 

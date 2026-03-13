@@ -25,6 +25,7 @@ const sampleBooks = [
     price: 29.99,
     stockQuantity: 50,
     reorderLevel: 10,
+    description: 'A classic novel set in the Roaring Twenties, exploring themes of wealth, love, and the American Dream.',
   },
   {
     title: '1984',
@@ -34,6 +35,7 @@ const sampleBooks = [
     price: 24.99,
     stockQuantity: 35,
     reorderLevel: 8,
+    description: 'A chilling portrayal of a totalitarian future where Thought Police and Big Brother monitor every move.',
   },
   {
     title: 'To Kill a Mockingbird',
@@ -43,6 +45,7 @@ const sampleBooks = [
     price: 18.99,
     stockQuantity: 60,
     reorderLevel: 12,
+    description: 'A powerful story about racial injustice and the loss of innocence in the American South.',
   },
   {
     title: 'The Catcher in the Rye',
@@ -52,6 +55,7 @@ const sampleBooks = [
     price: 16.99,
     stockQuantity: 5,
     reorderLevel: 15,
+    description: 'The iconic story of teenage angst and rebellion follows Holden Caulfield after his expulsion from prep school.',
   },
   {
     title: 'Pride and Prejudice',
@@ -61,6 +65,7 @@ const sampleBooks = [
     price: 14.99,
     stockQuantity: 45,
     reorderLevel: 10,
+    description: 'A timeless witty romantic comedy of manners in 19th-century England, centered on Elizabeth Bennet.',
   },
   {
     title: 'The Lord of the Rings',
@@ -70,6 +75,7 @@ const sampleBooks = [
     price: 49.99,
     stockQuantity: 25,
     reorderLevel: 5,
+    description: 'An epic high-fantasy masterpiece about a fellowship quest to destroy a powerful, corruptive ring.',
   },
 ];
 

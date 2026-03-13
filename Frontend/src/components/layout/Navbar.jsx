@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Book, Menu, X, LogOut } from 'lucide-react';
+import { Book, Menu, X, LogOut, ShoppingCart } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import useAuthStore from '@/store/authStore';
+import useCartStore from '@/store/cartStore';
 
 const navLinks = [
+  { label: 'Books', path: '/catalog' },
   { label: 'Features', id: 'features' },
   { label: 'How It Works', id: 'how-it-works' },
   { label: 'Testimonials', id: 'testimonials' },
@@ -30,6 +32,7 @@ const Navbar = () => {
   const [hovered, setHovered] = useState(null);
   const [activeSection, setActiveSection] = useState(null);
   const { user, token, logout } = useAuthStore();
+  const { getItemCount, setIsOpen } = useCartStore();
 
   const linkKey = (link) => link.path ?? link.id;
   const activeNavKey =
@@ -184,7 +187,9 @@ const Navbar = () => {
                     {getInitials(user.name)}
                   </div>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link to="/dashboard">Dashboard</Link>
+                    <Link to={user?.role === 'Customer' ? '/profile' : '/dashboard'}>
+                      {user?.role === 'Customer' ? 'My Account' : 'Dashboard'}
+                    </Link>
                   </Button>
                   <Button variant="ghost" size="sm" onClick={handleLogout}>
                     <LogOut className="h-4 w-4 mr-1" />
@@ -202,6 +207,19 @@ const Navbar = () => {
                   </Button>
                 </>
               )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative text-foreground"
+                onClick={() => setIsOpen(true)}
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {getItemCount() > 0 && (
+                  <span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                    {getItemCount()}
+                  </span>
+                )}
+              </Button>
             </div>
 
             {/* Mobile Menu Toggle */}
@@ -276,7 +294,9 @@ const Navbar = () => {
                       className="flex-1"
                       asChild
                     >
-                      <Link to="/dashboard">Dashboard</Link>
+                      <Link to={user?.role === 'Customer' ? '/profile' : '/dashboard'}>
+                        {user?.role === 'Customer' ? 'My Account' : 'Dashboard'}
+                      </Link>
                     </Button>
                     <Button
                       variant="ghost"

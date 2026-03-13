@@ -17,7 +17,7 @@ const useAuthStore = create((set) => ({
       const { token, user } = res.data;
       localStorage.setItem('token', token);
       set({ token, user, isLoading: false });
-      return { success: true };
+      return { success: true, role: user.role };
     } catch (err) {
       const status = err.response?.status;
       const message = err.response?.data?.message || 'Login failed';
@@ -29,6 +29,20 @@ const useAuthStore = create((set) => ({
 
       set({ isLoading: false, error: message });
       return { success: false, unverified: false };
+    }
+  },
+
+  register: async (name, email, password) => {
+    set({ isLoading: true, error: null });
+    try {
+      // Calling the public endpoint for customer registration
+      await API.post('/users/register-customer', { name, email, password });
+      set({ isLoading: false, unverifiedEmail: email });
+      return { success: true };
+    } catch (err) {
+      const message = err.response?.data?.message || 'Registration failed';
+      set({ isLoading: false, error: message });
+      return { success: false };
     }
   },
 

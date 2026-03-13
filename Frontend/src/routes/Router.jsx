@@ -72,8 +72,13 @@ import { createBrowserRouter } from 'react-router';
 import RootLayout from '@/layouts/RootLayout';
 import Landing from '@/pages/Landing';
 import AboutPage from '@/pages/AboutPage';
+import CatalogPage from '@/pages/CatalogPage';
+import BookDetailPage from '@/pages/BookDetailPage';
+import CustomerProfile from '@/pages/CustomerProfile';
+import CheckoutPage from '@/pages/CheckoutPage';
 import AuthLayout from '@/layouts/AuthLayout';
 import LoginPage from '@/pages/LoginPage';
+import RegisterPage from '@/pages/RegisterPage';
 import VerifyEmailPage from '@/pages/VerifyEmailPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
@@ -109,6 +114,24 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Landing /> },
       { path: 'about', element: <AboutPage /> },
+      { path: 'catalog', element: <CatalogPage /> },
+      { path: 'books/:id', element: <BookDetailPage /> },
+      { 
+        path: 'profile', 
+        element: (
+          <ProtectedRoute>
+            <CustomerProfile />
+          </ProtectedRoute>
+        ) 
+      },
+      {
+        path: 'checkout',
+        element: (
+          <ProtectedRoute>
+            <CheckoutPage />
+          </ProtectedRoute>
+        )
+      }
     ],
   },
   {
@@ -116,6 +139,7 @@ const router = createBrowserRouter([
     element: <AuthLayout />,
     children: [
       { path: 'login', element: <LoginPage /> },
+      { path: 'register', element: <RegisterPage /> },
       { path: 'verify-email', element: <VerifyEmailPage /> },
       { path: 'forgot-password', element: <ForgotPasswordPage /> },
       { path: 'reset-password/:token', element: <ResetPasswordPage /> },

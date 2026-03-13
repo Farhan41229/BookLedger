@@ -41,13 +41,14 @@ export const getMe = async (req, res, next) => {
  */
 export const registerUser = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password } = req.body;
+    const role = req.body.role || 'Customer';
 
-    if (!name || !email || !password || !role) {
+    if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
         message:
-          'Please provide all required fields: name, email, password, role',
+          'Please provide all required fields: name, email, password',
       });
     }
 
@@ -59,7 +60,7 @@ export const registerUser = async (req, res, next) => {
       });
     }
 
-    const validRoles = ['Admin', 'Manager', 'Cashier'];
+    const validRoles = ['Admin', 'Manager', 'Cashier', 'Customer'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         success: false,
@@ -102,6 +103,51 @@ export const registerUser = async (req, res, next) => {
         email: user.email,
         role: user.role,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Register a new customer (Public)
+ * POST /users/register-customer
+ */
+export const registerCustomer = async (req, res, next) => {
+  try {
+    const { name, email, password } = req.body;
+    const role = 'Customer';
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide name, email, and password',
+      });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already registered',
+      });
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      isEmailVerified: true,
+    });
+
+    await createAuditLog('User', 'Insert', null, null, { name: user.name, email: user.email, role: user.role }, user._id);
+
+    res.status(201).json({
+      success: true,
+      message: 'Registration successful. You can now log in.',
     });
   } catch (error) {
     next(error);

@@ -14,10 +14,14 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
  * @returns {Promise<string>}
  */
 export const generateAIText = async (prompt, maxRetries = 3) => {
+  if (!process.env.GEMINI_API_KEY) {
+    return 'Error: GEMINI_API_KEY is missing in config.env. Please add your Gemini API key.';
+  }
+
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const model = genAI.getGenerativeModel({
-        model: 'gemini-2.5-flash-lite',
+        model: 'gemini-2.5-flash',
       });
 
       const result = await model.generateContent(prompt);
@@ -78,7 +82,7 @@ export const generateAITextWithImage = async (
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const model = genAI.getGenerativeModel({
-        model: 'gemini-2.5-flash-lite',
+        model: 'gemini-2.5-flash',
       });
 
       const result = await model.generateContent([

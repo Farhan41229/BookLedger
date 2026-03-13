@@ -162,6 +162,41 @@ export const getSalesByCustomer = async (req, res, next) => {
 };
 
 /**
+ * Get my online orders (Customer only)
+ * GET /sales/my-orders
+ */
+export const getMyOrders = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const sales = await Sale.find({ cashierId: req.user._id })
+      .populate("items.bookId", "title isbn coverImage author price")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const total = await Sale.countDocuments({
+      cashierId: req.user._id,
+    });
+
+    res.status(200).json({
+      success: true,
+      sales,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Get sales report (Admin/Manager only)
  * GET /sales/reports/summary
  *

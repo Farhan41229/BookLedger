@@ -383,3 +383,23 @@ section {
   border-radius: 999px;
   background: linear-gradient(90deg, oklch(0.488 0.243 264), oklch(0.65 0.20 300));
 }
+
+/* 3D Transform Utilities for Mystery Cards */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0); /* Better 3D layer promotion */
+}
+.rotate-y-180-back {
+  transform: rotateY(180deg) translateZ(1px); /* Slight Z-offset to ensure it's on top when flipped */
+}
+.rotate-y-0-front {
+  transform: rotateY(0deg) translateZ(1px);
+}

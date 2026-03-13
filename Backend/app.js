@@ -2,7 +2,9 @@ import express from "express";
 import { config } from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import fileUpload from "express-fileupload";
 import { connectDB } from "./Database/db.js";
+import { cloudinaryConnect } from "./config/cloudinaryConfig.js";
 import { errorHandler, notFound } from "./middlewares/errorMiddleware.js";
 
 // Route imports
@@ -27,6 +29,15 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: "/tmp/",
+  })
+);
+
+// Connect to Cloudinary
+cloudinaryConnect();
 
 // Ensure DB is connected before handling any API request
 app.use("/api", async (req, res, next) => {

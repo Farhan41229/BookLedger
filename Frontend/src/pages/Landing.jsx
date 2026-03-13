@@ -1,4 +1,5 @@
 import HeroSection from '@/components/landing/HeroSection';
+import FeaturedBooksSection from '@/components/landing/FeaturedBooksSection';
 import BrandShowcase from '@/components/landing/BrandShowcase';
 import FeaturesSection from '@/components/landing/FeaturesSection';
 import HowItWorksSection from '@/components/landing/HowItWorksSection';
@@ -12,6 +13,7 @@ const Landing = () => {
   return (
     <>
       <HeroSection />
+      <FeaturedBooksSection />
       <BrandShowcase />
       <FeaturesSection />
       <HowItWorksSection />

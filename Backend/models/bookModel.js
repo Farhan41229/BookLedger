@@ -25,6 +25,14 @@ const bookSchema = new mongoose.Schema(
       required: [true, "Please provide a price"],
       min: [0, "Price cannot be negative"],
     },
+    coverImage: {
+      type: String,
+      default: null,
+    },
+    coverImageId: {
+      type: String,
+      default: null,
+    },
     discountedPrice: {
       type: Number,
       default: null,
@@ -41,6 +49,10 @@ const bookSchema = new mongoose.Schema(
       required: [true, "Please provide reorder level"],
       integer: true,
       min: [0, "Reorder level cannot be negative"],
+    },
+    description: {
+      type: String,
+      default: null,
     },
     lastSoldDate: {
       type: Date,

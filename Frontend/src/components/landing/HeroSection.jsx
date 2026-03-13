@@ -12,10 +12,12 @@ const fadeUp = {
   }),
 };
 
+import { Link } from 'react-router';
+
 const featureBadges = [
-  { icon: Zap, label: "Lightning Fast" },
-  { icon: Shield, label: "Bank-Level Security" },
-  { icon: Cloud, label: "Cloud-Based" },
+  { icon: Zap, label: "Fast Shipping" },
+  { icon: Shield, label: "Secure Checkout" },
+  { icon: BookOpen, label: "Curated Selection" },
 ];
 
 const HeroSection = () => {
@@ -37,18 +39,18 @@ const HeroSection = () => {
             <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}>
               <Badge variant="secondary" className="px-4 py-1.5 text-sm font-medium gap-2 border border-primary/20">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
-                Now serving 1,000+ bookstores worldwide
+                Discover over 10,000 titles across all genres
               </Badge>
             </motion.div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.1] tracking-tight mb-4">
-              {['The', 'Modern', 'Way', 'to', 'Manage', 'Your', 'Bookstore'].map((word, index) => (
+              {['Your', 'Next', 'Great', 'Read', 'Awaits'].map((word, index) => (
                 <motion.span
                   key={index}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: index * 0.1 }}
-                  className={index >= 5 ? 'gradient-text' : ''}
+                  className={index >= 2 ? 'gradient-text' : ''}
                 >
                   {word}{' '}
                 </motion.span>
@@ -83,9 +85,7 @@ const HeroSection = () => {
               custom={2}
               className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed"
             >
-              BookLedger streamlines inventory, sales, and customer management
-              for bookstores of all sizes. Spend less time on paperwork, more
-              time with books.
+              Explore our massive collection of bestselling novels, educational texts, and hidden gems. Dive into your next adventure today.
             </motion.p>
 
             {/* CTA Buttons */}
@@ -96,12 +96,14 @@ const HeroSection = () => {
               custom={3}
               className="flex flex-wrap gap-4"
             >
-              <Button size="lg" className="gap-2 shadow-lg shadow-primary/25 text-base px-8 h-12">
-                Start Free Trial
-                <ArrowRight className="h-4 w-4" />
+              <Button size="lg" className="gap-2 shadow-lg shadow-primary/25 text-base px-8 h-12" asChild>
+                <Link to="/catalog">
+                  Browse Catalog
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" className="text-base px-8 h-12">
-                Watch Demo
+              <Button size="lg" variant="outline" className="text-base px-8 h-12" asChild>
+                <a href="#featured-books">View Featured</a>
               </Button>
             </motion.div>
 
@@ -113,7 +115,7 @@ const HeroSection = () => {
               custom={4}
               className="flex flex-wrap gap-x-6 gap-y-2"
             >
-              {['No credit card required', '14-day free trial', 'Cancel anytime'].map((text) => (
+              {['Free shipping over $50', '30-day returns', 'Secure checkout'].map((text) => (
                 <div key={text} className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                   <span className="text-sm text-muted-foreground">{text}</span>

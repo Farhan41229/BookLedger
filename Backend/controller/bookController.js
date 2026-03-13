@@ -2,6 +2,7 @@ import { Book } from "../models/bookModel.js";
 import { createAuditLog } from "../services/auditService.js";
 import { getEffectivePrice } from "../services/pricingService.js";
 import { generateAIText } from "../config/GeminiSetup.js";
+import { v2 as cloudinary } from "cloudinary";
 
 /**
  * AI-powered book recommendation for guests
@@ -19,7 +20,7 @@ export const recommendBooks = async (req, res, next) => {
     }
 
     // Fetch all books (lean fields only — enough for AI to reason about)
-    const books = await Book.find({}, "_id title author genre price stockQuantity");
+    const books = await Book.find({}, "_id title author genre price stockQuantity description");
 
     if (books.length === 0) {
       return res.status(404).json({
@@ -59,7 +60,8 @@ Respond with ONLY one of the three formats above. No explanation, no extra text.
     const aiResponse = await generateAIText(prompt);
 
     if (!aiResponse || aiResponse.startsWith("Error:")) {
-      const err = new Error("AI service failed to respond. Please try again later.");
+      console.error("Gemini AI Error in Controller:", aiResponse);
+      const err = new Error(aiResponse || "AI service failed to respond.");
       err.statusCode = 503;
       return next(err);
     }
@@ -136,6 +138,19 @@ export const createBook = async (req, res, next) => {
       });
     }
 
+    // Image Upload Logic
+    let coverImage = null;
+    let coverImageId = null;
+
+    if (req.files && req.files.coverImage) {
+      const file = req.files.coverImage;
+      const result = await cloudinary.uploader.upload(file.tempFilePath, {
+        folder: "bookledger/books",
+      });
+      coverImage = result.secure_url;
+      coverImageId = result.public_id;
+    }
+
     const book = await Book.create({
       title,
       author,
@@ -144,6 +159,8 @@ export const createBook = async (req, res, next) => {
       price,
       stockQuantity,
       reorderLevel,
+      coverImage,
+      coverImageId,
     });
 
     // Create audit log
@@ -347,6 +364,22 @@ export const updateBook = async (req, res, next) => {
     if (stockQuantity !== undefined) book.stockQuantity = stockQuantity;
     if (reorderLevel !== undefined) book.reorderLevel = reorderLevel;
 
+    // Handle Image Upload/Replacement
+    if (req.files && req.files.coverImage) {
+      const file = req.files.coverImage;
+
+      // Delete old image if it exists
+      if (book.coverImageId) {
+        await cloudinary.uploader.destroy(book.coverImageId);
+      }
+
+      const result = await cloudinary.uploader.upload(file.tempFilePath, {
+        folder: "bookledger/books",
+      });
+      book.coverImage = result.secure_url;
+      book.coverImageId = result.public_id;
+    }
+
     await book.save();
 
     // Create audit log
@@ -392,6 +425,11 @@ export const deleteBook = async (req, res, next) => {
         success: false,
         message: "Book not found",
       });
+    }
+
+    // Delete image from Cloudinary
+    if (book.coverImageId) {
+      await cloudinary.uploader.destroy(book.coverImageId);
     }
 
     // Create audit log

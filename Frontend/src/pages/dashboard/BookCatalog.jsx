@@ -270,7 +270,7 @@ const BookCatalog = () => {
   // Form State
   const initialFormState = {
     title: "", author: "", isbn: "", genre: "",
-    price: "", stockQuantity: "", reorderLevel: "5", supplier: ""
+    price: "", stockQuantity: "", reorderLevel: "5", supplier: "", coverImage: null
   };
   const [formData, setFormData] = useState(initialFormState);
   const [editingId, setEditingId] = useState(null);
@@ -296,11 +296,18 @@ const BookCatalog = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      const submitData = new FormData();
+      Object.keys(formData).forEach(key => {
+        if (formData[key] !== null && formData[key] !== undefined) {
+          submitData.append(key, formData[key]);
+        }
+      });
+
       if (editingId) {
-        await API.put(`/books/${editingId}`, formData);
+        await API.put(`/books/${editingId}`, submitData, { headers: { 'Content-Type': 'multipart/form-data' }});
         toast.success("Book updated");
       } else {
-        await API.post("/books", formData);
+        await API.post("/books", submitData, { headers: { 'Content-Type': 'multipart/form-data' }});
         toast.success("Book added");
       }
       setIsSheetOpen(false);
@@ -323,7 +330,8 @@ const BookCatalog = () => {
       price: book.price, 
       stockQuantity: book.stockQuantity,
       reorderLevel: book.reorderLevel, 
-      supplier: book.supplier || ""
+      supplier: book.supplier || "",
+      coverImage: null // We only track new files, keep null if not updating
     });
     setEditingId(book._id);
     setIsSheetOpen(true);
@@ -417,6 +425,16 @@ const BookCatalog = () => {
                                 required 
                             />
                         </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                        <Label htmlFor="coverImage" className="text-xs font-semibold text-muted-foreground uppercase">Cover Image</Label>
+                        <Input 
+                            id="coverImage" 
+                            type="file"
+                            accept="image/*"
+                            onChange={e => setFormData({...formData, coverImage: e.target.files[0]})} 
+                        />
                     </div>
                 </div>
               </div>
@@ -536,9 +554,20 @@ const BookCatalog = () => {
             ) : (
               filteredBooks.map((book) => (
                 <TableRow key={book._id} className="hover:bg-muted/50 transition-colors">
-                  <TableCell>
-                    <div className="font-medium text-base">{book.title}</div>
-                    <div className="text-xs text-muted-foreground">{book.author} • <span className="italic">{book.genre}</span></div>
+                  <TableCell className="flex items-center gap-3">
+                    {book.coverImage ? (
+                        <div className="h-12 w-8 overflow-hidden rounded bg-muted flex-shrink-0">
+                            <img src={book.coverImage} alt={book.title} className="h-full w-full object-cover" />
+                        </div>
+                    ) : (
+                        <div className="h-12 w-8 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                            <Book className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                    )}
+                    <div>
+                        <div className="font-medium text-base">{book.title}</div>
+                        <div className="text-xs text-muted-foreground">{book.author} • <span className="italic">{book.genre}</span></div>
+                    </div>
                   </TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">{book.isbn}</TableCell>
                   <TableCell className="font-medium">${Number(book.price).toFixed(2)}</TableCell>

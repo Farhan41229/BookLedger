@@ -1,34 +1,32 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Loader2 } from 'lucide-react';
+import { User, Mail, Loader2 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { IconInput } from '@/components/auth/IconInput';
+import toast from 'react-hot-toast';
 import { PasswordInput } from '@/components/auth/PasswordInput';
 import useAuthStore from '@/store/authStore';
 
-const LoginPage = () => {
+const RegisterPage = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const { login, isLoading, error, message, clearError, clearMessage } =
-    useAuthStore();
+  const { register, isLoading, error, message, clearError, clearMessage } = useAuthStore();
 
   useEffect(() => {
     clearError();
     clearMessage();
   }, []);
 
-  const handleLogin = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    const result = await login(email, password);
+    const result = await register(name, email, password);
     if (result.success) {
-      if (result.role === 'Customer') navigate('/profile');
-      else navigate('/dashboard');
-    } else if (result.unverified) {
-      navigate('/auth/verify-email');
+      toast.success('Registration successful! Please log in.');
+      navigate('/auth/login');
     }
   };
 
@@ -42,10 +40,10 @@ const LoginPage = () => {
       <div className="glass rounded-2xl shadow-xl max-w-lg w-full mx-4 overflow-hidden">
         <div className="p-10">
           <h2 className="text-3xl font-bold mb-2 text-center gradient-text">
-            Welcome Back
+            Create an Account
           </h2>
           <p className="text-muted-foreground text-center text-sm mb-6">
-            Sign in to your BookLedger account
+            Join BookLedger to start shopping
           </p>
 
           {error && (
@@ -60,7 +58,16 @@ const LoginPage = () => {
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleRegister} className="space-y-4">
+            <IconInput
+              icon={User}
+              type="text"
+              placeholder="Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+
             <IconInput
               icon={Mail}
               type="email"
@@ -71,40 +78,23 @@ const LoginPage = () => {
             />
 
             <PasswordInput
-              placeholder="Password"
+              placeholder="Password (min 8 characters)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={8}
             />
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Checkbox id="remember" />
-                <label
-                  htmlFor="remember"
-                  className="text-sm text-muted-foreground cursor-pointer select-none"
-                >
-                  Remember me
-                </label>
-              </div>
-              <Link
-                to="/auth/forgot-password"
-                className="text-sm text-primary hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
 
             <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
               <Button
                 type="submit"
-                className="w-full animated-gradient text-white h-11 shadow-lg shadow-primary/25"
+                className="w-full animated-gradient text-white h-11 mt-4 shadow-lg shadow-primary/25"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
-                  'Sign In'
+                  'Sign Up'
                 )}
               </Button>
             </motion.div>
@@ -113,9 +103,9 @@ const LoginPage = () => {
 
         <div className="px-8 py-4 border-t border-border/50 bg-muted/20 text-center">
           <p className="text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <Link to="/auth/register" className="font-semibold text-primary hover:underline">
-              Sign Up
+            Already have an account?{' '}
+            <Link to="/auth/login" className="font-semibold text-primary hover:underline">
+              Sign In
             </Link>
           </p>
         </div>
@@ -124,4 +114,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default RegisterPage;
