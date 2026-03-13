@@ -67,4 +67,12 @@ const bookSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+bookSchema.pre("save", function (next) {
+  if (this.title) this.title = this.title.trim();
+  if (this.author) this.author = this.author.trim();
+  if (this.genre) this.genre = this.genre.trim();
+  if (this.isbn) this.isbn = this.isbn.trim();
+  next();
+});
+
 export const Book = mongoose.model("Book", bookSchema);

@@ -43,7 +43,7 @@ const customerSchema = new mongoose.Schema(
         },
         totalAmount: {
           type: Number,
-          required: true,
+          required: [true, "Total amount is required for purchase history"],
         },
         purchaseDate: {
           type: Date,
@@ -55,5 +55,10 @@ const customerSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+customerSchema.pre("save", function (next) {
+  if (this.name) this.name = this.name.trim();
+  next();
+});
 
 export const Customer = mongoose.model("Customer", customerSchema);
