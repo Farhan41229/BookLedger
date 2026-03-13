@@ -26,14 +26,20 @@ export const register= catchAsyncError (async (req, res, next) => {
         }
 
         const hashedPassword= await bcrypt.hash(password, 10);
-        const user = await user.create({
+        const newUser = await user.create({
             name,
             email,
             password: hashedPassword,
             accountVerified: false,
         });
 
-    }catch(error){
-        return next(new ErrorHandler(error.message, 500));
+        res.status(201).json({
+            success: true,
+            message: "User registered successfully",
+            user: newUser,
+        });
+    } catch(error) {
+        console.error("Registration error:", error);
+        return next(new ErrorHandler("An unexpected server error occurred during registration. Please try again later.", 500));
     }
 });

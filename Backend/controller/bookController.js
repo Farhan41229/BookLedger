@@ -105,7 +105,10 @@ Respond with ONLY one of the three formats above. No explanation, no extra text.
       count: booksWithPrices.length,
     });
   } catch (error) {
-    next(error);
+    console.error("AI Recommendation Error:", error);
+    const err = new Error("An unexpected server error occurred while generating recommendations. Please try again later.");
+    err.statusCode = 500;
+    next(err);
   }
 };
 
@@ -168,7 +171,10 @@ export const createBook = async (req, res, next) => {
       book,
     });
   } catch (error) {
-    next(error);
+    console.error("Create Book Error:", error);
+    const err = new Error("An unexpected server error occurred while creating the book. Please try again later.");
+    err.statusCode = 500;
+    next(err);
   }
 };
 
@@ -206,7 +212,10 @@ export const getAllBooks = async (req, res, next) => {
       },
     });
   } catch (error) {
-    next(error);
+    console.error("Get All Books Error:", error);
+    const err = new Error("An unexpected server error occurred while retrieving books. Please try again later.");
+    err.statusCode = 500;
+    next(err);
   }
 };
 
@@ -282,7 +291,10 @@ export const searchBooks = async (req, res, next) => {
       },
     });
   } catch (error) {
-    next(error);
+    console.error("Search Books Error:", error);
+    const err = new Error("An unexpected server error occurred while searching for books. Please try again later.");
+    err.statusCode = 500;
+    next(err);
   }
 };
 
@@ -309,7 +321,10 @@ export const getBookById = async (req, res, next) => {
       book: bookObj,
     });
   } catch (error) {
-    next(error);
+    console.error("Get Book By ID Error:", error);
+    const err = new Error("An unexpected server error occurred while retrieving the book details. Please try again later.");
+    err.statusCode = 500;
+    next(err);
   }
 };
 
@@ -375,7 +390,10 @@ export const updateBook = async (req, res, next) => {
       book: bookObj,
     });
   } catch (error) {
-    next(error);
+    console.error("Update Book Error:", error);
+    const err = new Error("An unexpected server error occurred while updating the book. Please try again later.");
+    err.statusCode = 500;
+    next(err);
   }
 };
 
@@ -414,6 +432,9 @@ export const deleteBook = async (req, res, next) => {
       message: "Book deleted successfully",
     });
   } catch (error) {
-    next(error);
+    console.error("Delete Book Error:", error);
+    const err = new Error("An unexpected server error occurred while deleting the book. Please try again later.");
+    err.statusCode = 500;
+    next(err);
   }
 };
