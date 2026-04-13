@@ -43,9 +43,9 @@ const CheckoutPage = () => {
       const saleData = {
         cashierId: user._id, 
         items: items.map(item => ({
-          bookId: item.book._id,
+          bookId: item._id,
           quantity: item.quantity,
-          unitPrice: item.book.price
+          unitPrice: item.price
         })),
         totalAmount: getTotal()
       };

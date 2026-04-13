@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Sparkles, Book as BookIcon, RotateCcw, ShoppingCart, Search, Clock, Compass } from 'lucide-react';
+import { Loader2, Sparkles, Book as BookIcon, RotateCcw, ShoppingCart, Search, Clock, Compass, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import toast from 'react-hot-toast';
 import API from '@/lib/axios';
 import useCartStore from '@/store/cartStore';
@@ -36,6 +37,10 @@ const CatalogPage = () => {
   const [loadingBooks, setLoadingBooks] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('All');
+
+  // Preview Modal State
+  const [previewBook, setPreviewBook] = useState(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const { addItem } = useCartStore();
 
@@ -331,6 +336,18 @@ const CatalogPage = () => {
                                      <BookIcon className="h-12 w-12 text-muted-foreground/30" />
                                    </div>
                                  )}
+                                 <Button 
+                                   variant="ghost" 
+                                   size="icon" 
+                                   className="absolute top-2 right-2 text-white bg-black/40 hover:bg-black/60 rounded-full h-8 w-8 backdrop-blur-sm z-10" 
+                                   onClick={(e) => { 
+                                     e.stopPropagation(); 
+                                     setPreviewBook({ book, index }); 
+                                     setIsPreviewOpen(true); 
+                                   }}
+                                 >
+                                   <Eye className="h-4 w-4" />
+                                 </Button>
                                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 pb-2">
                                    <h4 className="text-white font-bold leading-tight line-clamp-2">{book.title}</h4>
                                    <p className="text-white/80 text-xs">{book.author}</p>
@@ -486,6 +503,75 @@ const CatalogPage = () => {
           )}
 
         </AnimatePresence>
+
+        {/* ===================== PREVIEW MODAL ===================== */}
+        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+          <DialogContent className="max-w-2xl bg-card border-border/50 backdrop-blur-xl p-0 overflow-hidden">
+            <div className="flex flex-col md:flex-row max-h-[85vh]">
+              {/* Image Side */}
+              <div className="md:w-2/5 bg-muted relative shrink-0">
+                {previewBook?.book?.coverImage ? (
+                  <img src={previewBook.book.coverImage} alt={previewBook.book.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center min-h-[250px]">
+                    <BookIcon className="h-16 w-16 text-muted-foreground/30" />
+                  </div>
+                )}
+              </div>
+              
+              {/* Content Side */}
+              <div className="md:w-3/5 p-6 md:p-8 flex flex-col justify-between overflow-y-auto">
+                <div className="space-y-4">
+                  <DialogHeader className="text-left space-y-1">
+                    <DialogTitle className="text-2xl font-bold font-serif leading-tight">
+                      {previewBook?.book?.title}
+                    </DialogTitle>
+                    <DialogDescription className="text-base font-medium flex items-center gap-2">
+                      <span className="text-foreground">{previewBook?.book?.author}</span>
+                      <span className="text-muted-foreground">•</span>
+                      <Badge variant="secondary" className="font-normal">{previewBook?.book?.genre}</Badge>
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div>
+                    <div className="font-bold text-2xl text-primary mb-4">
+                      ${Number(previewBook?.book?.price || 0).toFixed(2)}
+                    </div>
+                    <div className="prose prose-sm dark:prose-invert">
+                      <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">Synopsis</h4>
+                      <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                        {previewBook?.book?.description || "No synopsis available for this book."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 mt-8 pt-6 border-t border-border/50">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 h-12"
+                    onClick={() => { 
+                      handleSkip(previewBook?.index); 
+                      setIsPreviewOpen(false); 
+                    }}
+                  >
+                    Skip
+                  </Button>
+                  <Button 
+                    className="flex-1 h-12 animated-gradient text-white text-base"
+                    onClick={() => { 
+                      handleAddToCart(previewBook?.book, previewBook?.index); 
+                      setIsPreviewOpen(false); 
+                    }}
+                  >
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    Add to Cart
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
