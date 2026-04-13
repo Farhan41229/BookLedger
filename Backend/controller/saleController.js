@@ -2,6 +2,9 @@ import { Sale } from "../models/saleModel.js";
 import { processCheckout, validateSaleData } from "../services/transactionService.js";
 import { getEffectivePrice } from "../services/pricingService.js";
 import { Book } from "../models/bookModel.js";
+import Stripe from "stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 /**
  * Create a sale (Checkout)
@@ -292,6 +295,44 @@ export const cancelSale = async (req, res, next) => {
       sale,
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Create a Stripe Checkout Session
+ * POST /sales/create-checkout-session
+ */
+export const createStripeSession = async (req, res, next) => {
+  try {
+    const { items } = req.body;
+    
+    if (!items || items.length === 0) {
+      return res.status(400).json({ success: false, message: "No items provided" });
+    }
+
+    const line_items = items.map(item => ({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: item.title || 'Book', // using title if passed
+        },
+        unit_amount: Math.round(item.unitPrice * 100), // convert to cents
+      },
+      quantity: item.quantity,
+    }));
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items,
+      mode: 'payment',
+      success_url: `${process.env.FRONTEND_URL}/checkout?success=true`,
+      cancel_url: `${process.env.FRONTEND_URL}/checkout?canceled=true`,
+    });
+
+    res.status(200).json({ success: true, url: session.url });
+  } catch (error) {
+    console.error("Stripe Checkout Error:", error);
     next(error);
   }
 };

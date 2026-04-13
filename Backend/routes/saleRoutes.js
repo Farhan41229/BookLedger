@@ -8,6 +8,7 @@ import {
   getSalesReport,
   cancelSale,
   getMyOrders,
+  createStripeSession,
 } from "../controller/saleController.js";
 
 const router = express.Router();
@@ -18,6 +19,13 @@ router.post(
   authenticate,
   authorize(["Cashier", "Manager", "Admin", "Customer"]),
   createSale
+);
+
+router.post(
+  "/create-checkout-session",
+  authenticate,
+  authorize(["Cashier", "Manager", "Admin", "Customer"]),
+  createStripeSession
 );
 
 // Manager/Admin - can view all sales

@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router';
-import { CreditCard, Truck, User, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Loader2, CheckCircle2, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { IconInput } from '@/components/auth/IconInput';
 import useCartStore from '@/store/cartStore';
 import useAuthStore from '@/store/authStore';
 import API from '@/lib/axios';
@@ -14,22 +13,10 @@ const CheckoutPage = () => {
   const navigate = useNavigate();
   const { items, getTotal, clearCart } = useCartStore();
   const { user } = useAuthStore();
+  const hasProcessed = useRef(false);
   
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    address: '',
-    city: '',
-    zip: '',
-    cardNumber: '',
-    expiryDate: '',
-    cvv: ''
-  });
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleCheckout = async (e) => {
     e.preventDefault();
@@ -41,27 +28,65 @@ const CheckoutPage = () => {
     setLoading(true);
     try {
       const saleData = {
-        cashierId: user._id, 
+        cashierId: user?._id, 
         items: items.map(item => ({
           bookId: item._id,
           quantity: item.quantity,
-          unitPrice: item.price
+          unitPrice: item.price,
+          title: item.title
         })),
         totalAmount: getTotal()
       };
 
-      await API.post('/sales', saleData);
-      
-      setSuccess(true);
-      clearCart();
-      toast.success('Order placed successfully!');
+      const res = await API.post('/sales/create-checkout-session', { items: saleData.items });
+      window.location.href = res.data.url;
     } catch (error) {
        console.error(error);
        toast.error(error.response?.data?.message || 'Failed to process order. Please try again.');
-    } finally {
-      setLoading(false);
+       setLoading(false); // only disable loading if error. success will redirect.
     }
   };
+
+  useEffect(() => {
+    if (success || items.length === 0) return;
+
+    const query = new URLSearchParams(window.location.search);
+    
+    if (query.get("success") && !hasProcessed.current) {
+      hasProcessed.current = true;
+      const completeOrder = async () => {
+        setLoading(true);
+        try {
+          const saleData = {
+            cashierId: user?._id, 
+            items: items.map(item => ({
+              bookId: item._id,
+              quantity: item.quantity,
+              unitPrice: item.price
+            })),
+            totalAmount: getTotal()
+          };
+          
+          await API.post('/sales', saleData);
+          setSuccess(true);
+          clearCart();
+          toast.success('Order placed successfully!');
+          window.history.replaceState(null, '', '/checkout');
+        } catch (error) {
+          console.error(error);
+          toast.error(error.response?.data?.message || 'Failed to process order. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      };
+      completeOrder();
+    }
+
+    if (query.get("canceled")) {
+      toast.error("Order canceled - you can checkout when you're ready.");
+      window.history.replaceState(null, '', '/checkout');
+    }
+  }, [items.length, success, clearCart, getTotal, user]);
 
   if (success) {
     return (
@@ -88,52 +113,15 @@ const CheckoutPage = () => {
           Back
         </Button>
         
-        <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+        <h1 className="text-3xl font-bold mb-8 text-center md:text-left">Checkout</h1>
 
-        <div className="grid lg:grid-cols-[1fr_400px] gap-8">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <form id="checkout-form" onSubmit={handleCheckout} className="space-y-6">
-              
-              <Card className="bg-card/40 border-border/50 shadow-lg shadow-primary/5">
-                <CardHeader>
-                  <CardTitle className="text-xl flex items-center gap-2">
-                    <Truck className="h-5 w-5 text-primary" />
-                    Shipping Details
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <IconInput icon={User} name="name" placeholder="Full Name" value={formData.name} onChange={handleChange} required />
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <IconInput icon={Truck} name="address" placeholder="Address" value={formData.address} onChange={handleChange} required />
-                    <IconInput icon={Truck} name="city" placeholder="City" value={formData.city} onChange={handleChange} required />
-                  </div>
-                  <IconInput icon={Truck} name="zip" placeholder="Zip Code" value={formData.zip} onChange={handleChange} required />
-                </CardContent>
-              </Card>
-
-              <Card className="bg-card/40 border-border/50 shadow-lg shadow-primary/5">
-                <CardHeader>
-                  <CardTitle className="text-xl flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-primary" />
-                    Payment Method
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <IconInput icon={CreditCard} name="cardNumber" placeholder="Card Number" value={formData.cardNumber} onChange={handleChange} required />
-                  <div className="grid grid-cols-2 gap-4">
-                    <IconInput icon={CreditCard} name="expiryDate" placeholder="MM/YY" value={formData.expiryDate} onChange={handleChange} required />
-                    <IconInput icon={CreditCard} name="cvv" type="password" placeholder="CVV" value={formData.cvv} onChange={handleChange} required />
-                  </div>
-                </CardContent>
-              </Card>
-
-            </form>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-            <Card className="bg-card/40 border-border/50 shadow-lg shadow-primary/5 sticky top-24">
+        <div className="flex justify-center">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-lg">
+            <Card className="bg-card/40 border-border/50 shadow-lg shadow-primary/5">
               <CardHeader>
-                <CardTitle>Order Summary</CardTitle>
+                <CardTitle className="flex justify-between items-center text-xl">
+                  Order Summary
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="max-h-[300px] overflow-y-auto space-y-3 pr-2 scrollbar-thin">
@@ -164,12 +152,17 @@ const CheckoutPage = () => {
                 </div>
 
                 <Button 
-                  type="submit" 
-                  form="checkout-form"
-                  className="w-full animated-gradient text-white h-12 mt-6 shadow-lg"
+                  type="button" 
+                  onClick={handleCheckout}
+                  className="w-full animated-gradient text-white h-12 mt-6 shadow-lg text-lg"
                   disabled={loading || items.length === 0}
                 >
-                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : `Pay $${getTotal().toFixed(2)}`}
+                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
+                    <>
+                      <Lock className="w-4 h-4 mr-2" />
+                      Checkout Securely
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
