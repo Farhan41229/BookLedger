@@ -14,6 +14,7 @@ import {
   sendPasswordResetSuccessEmail,
 } from '../Brevo/Brevoemail.js';
 import crypto from 'crypto';
+import { v2 as cloudinary } from "cloudinary";
 
 /**
  * Get current authenticated user
@@ -599,6 +600,60 @@ export const resetPassword = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Password reset successful',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update current user profile
+ * PUT /users/update-profile
+ */
+export const updateProfile = async (req, res, next) => {
+  try {
+    const { name } = req.body;
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    if (name) {
+      user.name = name;
+    }
+
+    if (req.files && req.files.profileImage) {
+      const file = req.files.profileImage;
+
+      // Delete old image from Cloudinary if exists
+      if (user.profileImageId) {
+        await cloudinary.uploader.destroy(user.profileImageId);
+      }
+
+      const result = await cloudinary.uploader.upload(file.tempFilePath, {
+        folder: "bookledger/users",
+        width: 300,
+        height: 300,
+        crop: "fill"
+      });
+
+      user.profileImage = result.secure_url;
+      user.profileImageId = result.public_id;
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profileImage: user.profileImage
+      }
     });
   } catch (error) {
     next(error);

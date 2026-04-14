@@ -34,7 +34,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import useAuthStore from '@/store/authStore';
 
 // Define navigation items for each role
@@ -120,6 +120,7 @@ export function DashboardSidebar() {
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
+                    <AvatarImage src={user?.profileImage} alt={user?.name} className="object-cover" />
                     <AvatarFallback className="rounded-lg">
                       {user?.name?.substring(0, 2).toUpperCase() || 'US'}
                     </AvatarFallback>
@@ -135,7 +136,13 @@ export function DashboardSidebar() {
                 side="top"
                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
               >
-                <DropdownMenuItem onClick={logout}>
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard/profile" className="flex items-center cursor-pointer w-full">
+                    <User className="mr-2 size-4" />
+                    My Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive cursor-pointer">
                   <LogOut className="mr-2 size-4" />
                   Log out
                 </DropdownMenuItem>

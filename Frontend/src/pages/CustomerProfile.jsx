@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import toast from 'react-hot-toast';
 import API from '@/lib/axios';
 import { useEffect } from 'react';
+import ProfileForm from '@/components/profile/ProfileForm';
 
 const CustomerProfile = () => {
   const { user, logout } = useAuthStore();
@@ -162,16 +163,7 @@ const CustomerProfile = () => {
                   <CardDescription>Manage your personal information.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="space-y-4 max-w-md">
-                    <div className="grid gap-2">
-                      <label className="text-sm font-semibold text-muted-foreground">Full Name</label>
-                      <div className="px-3 py-2 border rounded-md bg-muted/50">{user?.name}</div>
-                    </div>
-                    <div className="grid gap-2">
-                      <label className="text-sm font-semibold text-muted-foreground">Email Address</label>
-                      <div className="px-3 py-2 border rounded-md bg-muted/50">{user?.email}</div>
-                    </div>
-                  </div>
+                  <ProfileForm />
                 </CardContent>
               </Card>
             )}

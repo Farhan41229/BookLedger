@@ -13,6 +13,7 @@ import {
   verifyEmail,
   resendVerificationCode,
   getMe,
+  updateProfile,
 } from "../controller/userController.js";
 
 const router = express.Router();
@@ -27,6 +28,7 @@ router.post("/resend-verification", resendVerificationCode);    // Added route
 
 // Protected routes
 router.get("/me", authenticate, getMe);
+router.put("/update-profile", authenticate, updateProfile);
 
 router.post(
   "/register",

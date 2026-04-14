@@ -35,7 +35,7 @@ const useAuthStore = create((set) => ({
   register: async (name, email, password) => {
     set({ isLoading: true, error: null });
     try {
-      // Calling the public endpoint for customer registration
+
       await API.post('/users/register-customer', { name, email, password });
       set({ isLoading: false, unverifiedEmail: email });
       return { success: true };
@@ -100,6 +100,23 @@ const useAuthStore = create((set) => ({
       return { success: true };
     } catch (err) {
       const message = err.response?.data?.message || 'Reset failed';
+      set({ isLoading: false, error: message });
+      return { success: false };
+    }
+  },
+
+  updateProfile: async (formData) => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await API.put('/users/update-profile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      set({ user: res.data.user, isLoading: false, message: 'Profile updated successfully' });
+      return { success: true };
+    } catch (err) {
+      const message = err.response?.data?.message || 'Failed to update profile';
       set({ isLoading: false, error: message });
       return { success: false };
     }
