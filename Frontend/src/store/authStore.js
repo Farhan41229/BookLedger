@@ -23,6 +23,10 @@ const useAuthStore = create((set) => ({
       const message = err.response?.data?.message || 'Login failed';
 
       if (status === 403) {
+        if (message === 'Your account has been banned.') {
+          set({ isLoading: false, error: message });
+          return { success: false, unverified: false };
+        }
         set({ isLoading: false, error: null, unverifiedEmail: email });
         return { success: false, unverified: true };
       }

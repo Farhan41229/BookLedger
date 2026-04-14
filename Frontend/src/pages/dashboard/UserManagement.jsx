@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Trash2, Shield, Mail } from "lucide-react";
+import { Loader2, Plus, Trash2, Shield, Mail, Edit, Ban, CheckCircle } from "lucide-react";
 import toast from "react-hot-toast";
 
 const UserManagement = () => {
@@ -36,6 +36,14 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    email: "",
+    role: "",
+  });
 
   // Form State
   const [formData, setFormData] = useState({
@@ -70,6 +78,56 @@ const UserManagement = () => {
 
   const handleRoleChange = (value) => {
     setFormData((prev) => ({ ...prev, role: value }));
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditRoleChange = (value) => {
+    setEditFormData((prev) => ({ ...prev, role: value }));
+  };
+
+  const openEditDialog = (user) => {
+    setEditingUserId(user._id);
+    setEditFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editFormData.name || !editFormData.email) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      await API.put(`/users/${editingUserId}`, editFormData);
+      toast.success("User updated successfully");
+      setIsEditDialogOpen(false);
+      fetchUsers();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update user");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleToggleBan = async (user) => {
+    try {
+      const newStatus = !user.isBanned;
+      await API.put(`/users/${user._id}`, { isBanned: newStatus });
+      toast.success(`User ${newStatus ? 'banned' : 'unbanned'} successfully`);
+      setUsers(users.map(u => u._id === user._id ? { ...u, isBanned: newStatus } : u));
+    } catch (error) {
+      toast.error("Failed to update user ban status");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -186,6 +244,63 @@ const UserManagement = () => {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Edit User Profile</DialogTitle>
+              <DialogDescription>
+                Modify user details and system access role.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEditSubmit} className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-name" className="text-right">Name</Label>
+                <Input
+                  id="edit-name"
+                  name="name"
+                  value={editFormData.name}
+                  onChange={handleEditInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-email" className="text-right">Email</Label>
+                <Input
+                  id="edit-email"
+                  name="email"
+                  type="email"
+                  value={editFormData.email}
+                  onChange={handleEditInputChange}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-role" className="text-right">Role</Label>
+                <div className="col-span-3">
+                    <Select onValueChange={handleEditRoleChange} value={editFormData.role}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Admin">Admin</SelectItem>
+                        <SelectItem value="Manager">Manager</SelectItem>
+                        <SelectItem value="Cashier">Cashier</SelectItem>
+                        <SelectItem value="Customer">Customer</SelectItem>
+                    </SelectContent>
+                    </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={submitting}>
+                  {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="rounded-md border bg-card">
@@ -232,16 +347,35 @@ const UserManagement = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                        <span className="text-sm text-muted-foreground">Active</span>
+                        <span className={`h-2 w-2 rounded-full ${user.isBanned ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
+                        <span className="text-sm text-muted-foreground">{user.isBanned ? 'Banned' : 'Active'}</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={() => handleToggleBan(user)}
+                      className="text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/10 mr-1"
+                      title={user.isBanned ? "Unban User" : "Ban User"}
+                    >
+                      {user.isBanned ? <CheckCircle className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => openEditDialog(user)}
+                      className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/10 mr-1"
+                      title="Edit User"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => handleDelete(user._id)}
                       className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10"
+                      title="Delete User"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

@@ -186,6 +186,14 @@ export const loginUser = async (req, res, next) => {
       });
     }
 
+    // --- UPDATED: BLOCK LOGIN IF BANNED ---
+    if (user.isBanned) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been banned.',
+      });
+    }
+
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
@@ -276,7 +284,7 @@ export const getUserById = async (req, res, next) => {
  */
 export const updateUser = async (req, res, next) => {
   try {
-    const { name, email, role } = req.body;
+    const { name, email, role, isBanned } = req.body;
 
     const user = await User.findById(req.params.id);
 
@@ -291,12 +299,14 @@ export const updateUser = async (req, res, next) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      isBanned: user.isBanned,
     };
 
     // Update fields
     if (name) user.name = name;
     if (email) user.email = email;
     if (role) user.role = role;
+    if (isBanned !== undefined) user.isBanned = isBanned;
 
     await user.save();
 
