@@ -6,24 +6,7 @@ import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-/**
- * Create a sale (Checkout)
- * POST /sales
- *
- * Request body:
- * {
- *   "cashierId": "user_id",
- *   "customerId": "customer_id_optional",
- *   "items": [
- *     {
- *       "bookId": "book_id",
- *       "quantity": 2,
- *       "unitPrice": 29.99
- *     }
- *   ],
- *   "totalAmount": 59.98
- * }
- */
+
 export const createSale = async (req, res, next) => {
   try {
     const { cashierId, customerId, items, totalAmount } = req.body;
@@ -66,10 +49,7 @@ export const createSale = async (req, res, next) => {
   }
 };
 
-/**
- * Get all sales (Manager/Admin only)
- * GET /sales
- */
+
 export const getAllSales = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -101,10 +81,7 @@ export const getAllSales = async (req, res, next) => {
   }
 };
 
-/**
- * Get sale by ID
- * GET /sales/:id
- */
+
 export const getSaleById = async (req, res, next) => {
   try {
     const sale = await Sale.findById(req.params.id)
@@ -128,10 +105,7 @@ export const getSaleById = async (req, res, next) => {
   }
 };
 
-/**
- * Get sales by customer
- * GET /sales/customer/:customerId
- */
+
 export const getSalesByCustomer = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;

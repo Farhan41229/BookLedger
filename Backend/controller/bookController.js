@@ -35,7 +35,7 @@ export const recommendBooks = async (req, res, next) => {
       inStock: b.stockQuantity > 0,
     }));
 
-    const prompt = `You are a generous book recommendation assistant for BookLedger, an online bookstore.
+    const prompt = `You are a precise book recommendation assistant for BookLedger, an online bookstore.
 
 User request: "${message.trim()}"
 
@@ -43,14 +43,14 @@ Book inventory (JSON):
 ${JSON.stringify(bookList)}
 
 Instructions:
-- Users are casual and rarely precise. Interpret their request broadly and generously.
-- Include a book if it could reasonably appeal to someone making this request — even a loose or indirect match counts.
-- When the user uses "/" or "or" or "and" between terms, treat ALL terms as valid and return books matching ANY of them.
-- Sub-genres count: e.g., "Dystopian" qualifies as fictional. "Thriller" qualifies as suspense/mystery.
-- When in doubt, include the book rather than exclude it. Err on the side of more results.
-- If the user's message is complete gibberish, spam, or has absolutely zero connection to finding a book, respond with exactly: GIBBERISH
-- If the request is genuinely valid but truly nothing in the inventory could even loosely match, respond with exactly: NO_MATCH
-- If any books match (even loosely), respond with a JSON array of matching book IDs: ["id1","id2"]
+- Analyze the user's request carefully and return ONLY books that genuinely match the theme, genre, setting, mood, or subject.
+- A match means there is a real, meaningful connection between the user's request and the book. Do NOT include books just because they are popular or to fill a quota.
+- For example: if the user asks for "medieval books", only return books set in medieval times or with medieval/fantasy themes — NOT modern fiction, romance, or dystopian.
+- If the user asks for "dystopian", only return books with dystopian themes — not general fiction.
+- When the user uses "/" or "or" between terms, return books matching ANY of those terms.
+- If the user's message is complete gibberish or spam with zero connection to books, respond with exactly: GIBBERISH
+- If the request is valid but truly nothing in the inventory matches, respond with exactly: NO_MATCH
+- If books genuinely match, respond with ONLY a JSON array of matching book IDs: ["id1","id2"]
 
 Respond with ONLY one of the three formats above. No explanation, no extra text.`;
 

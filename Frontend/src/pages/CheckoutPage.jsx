@@ -160,7 +160,7 @@ const CheckoutPage = () => {
                   {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                     <>
                       <Lock className="w-4 h-4 mr-2" />
-                      Checkout Securely
+                      Proceed to Payment
                     </>
                   )}
                 </Button>

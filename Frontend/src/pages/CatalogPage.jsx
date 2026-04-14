@@ -94,14 +94,7 @@ const CatalogPage = () => {
       const res = await API.post('/books/recommend', { message: prompt });
       let matchedBooks = res.data.books || [];
 
-      if (matchedBooks.length < 10 && matchedBooks.length > 0) {
-          const allRes = await API.get('/books');
-          const allBooks = allRes.data.books || [];
-          const remainingNeeded = 10 - matchedBooks.length;
-          const otherBooks = allBooks.filter(b => !matchedBooks.some(mb => mb._id === b._id));
-          const randomFillers = shuffleArray(otherBooks).slice(0, remainingNeeded);
-          matchedBooks = [...matchedBooks, ...randomFillers];
-      } else if (matchedBooks.length > 10) {
+      if (matchedBooks.length > 10) {
           matchedBooks = matchedBooks.slice(0, 10);
       }
 
