@@ -4,10 +4,7 @@ import { getEffectivePrice } from "../services/pricingService.js";
 import { generateAIText } from "../config/GeminiSetup.js";
 import { v2 as cloudinary } from "cloudinary";
 
-/**
- * AI-powered book recommendation for guests
- * POST /books/recommend
- */
+
 export const recommendBooks = async (req, res, next) => {
   try {
     const { message } = req.body;
@@ -19,7 +16,7 @@ export const recommendBooks = async (req, res, next) => {
       });
     }
 
-    // Fetch all books (lean fields only — enough for AI to reason about)
+    
     const books = await Book.find({}, "_id title author genre price stockQuantity description");
 
     if (books.length === 0) {
@@ -82,7 +79,7 @@ Respond with ONLY one of the three formats above. No explanation, no extra text.
       });
     }
 
-    // Parse the array of IDs from Gemini's response
+
     let matchedIds;
     try {
       const jsonMatch = trimmed.match(/\[.*\]/s);
@@ -111,16 +108,13 @@ Respond with ONLY one of the three formats above. No explanation, no extra text.
   }
 };
 
-/**
- * Create a new book (Manager/Admin only)
- * POST /books
- */
+
 export const createBook = async (req, res, next) => {
   try {
     const { title, author, genre, isbn, price, stockQuantity, reorderLevel } =
       req.body;
 
-    // Validation
+
     if (!title || !author || !isbn || price === undefined || stockQuantity === undefined || reorderLevel === undefined) {
       return res.status(400).json({
         success: false,
@@ -129,7 +123,7 @@ export const createBook = async (req, res, next) => {
       });
     }
 
-    // Check ISBN uniqueness
+
     const existingBook = await Book.findOne({ isbn });
     if (existingBook) {
       return res.status(400).json({
@@ -138,7 +132,7 @@ export const createBook = async (req, res, next) => {
       });
     }
 
-    // Image Upload Logic
+
     let coverImage = null;
     let coverImageId = null;
 
@@ -189,10 +183,7 @@ export const createBook = async (req, res, next) => {
   }
 };
 
-/**
- * Get all books with pagination
- * GET /books
- */
+
 export const getAllBooks = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -227,18 +218,6 @@ export const getAllBooks = async (req, res, next) => {
   }
 };
 
-/**
- * Search books with filtering
- * GET /books/search
- *
- * Query params:
- * - title: partial, case-insensitive
- * - author: exact match
- * - genre: exact match
- * - isbn: exact match
- * - minPrice / maxPrice: range filter
- * - availability: inStock | outOfStock
- */
 export const searchBooks = async (req, res, next) => {
   try {
     const { title, author, genre, isbn, minPrice, maxPrice, availability, page = 1, limit = 10 } = req.query;
@@ -303,10 +282,7 @@ export const searchBooks = async (req, res, next) => {
   }
 };
 
-/**
- * Get book by ID
- * GET /books/:id
- */
+
 export const getBookById = async (req, res, next) => {
   try {
     const book = await Book.findById(req.params.id);
@@ -330,10 +306,7 @@ export const getBookById = async (req, res, next) => {
   }
 };
 
-/**
- * Update book (Manager/Admin only)
- * PUT /books/:id
- */
+
 export const updateBook = async (req, res, next) => {
   try {
     const { title, author, genre, price, stockQuantity, reorderLevel } = req.body;
@@ -412,10 +385,7 @@ export const updateBook = async (req, res, next) => {
   }
 };
 
-/**
- * Delete book (Manager/Admin only)
- * DELETE /books/:id
- */
+
 export const deleteBook = async (req, res, next) => {
   try {
     const book = await Book.findByIdAndDelete(req.params.id);

@@ -16,14 +16,8 @@ const CashierStats = () => {
       try {
         // Attempt to fetch sales. 
         // Note: If the backend restricts this, we might need a specific /sales/me endpoint later.
-        const res = await API.get("/sales");
-        
-        // Filter sales for the current logged-in cashier just in case
-        const mySales = (res.data.sales || []).filter(sale => 
-            sale.cashierId?._id === user?.id || sale.cashierId === user?.id
-        );
-        
-        setSales(mySales);
+        const res = await API.get("/sales/my-orders");
+        setSales(res.data.sales || []);
       } catch (error) {
         console.error("Failed to load performance stats", error);
       } finally {

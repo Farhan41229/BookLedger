@@ -44,20 +44,20 @@ router.get(
   getSalesReport
 );
 
+// My orders (must be before /:id to avoid "my-orders" being treated as an ID)
+router.get(
+  "/my-orders",
+  authenticate,
+  authorize(["Customer", "Cashier", "Manager", "Admin"]),
+  getMyOrders
+);
+
 // Get single sale
 router.get(
   "/:id",
   authenticate,
   authorize(["Manager", "Admin", "Cashier"]),
   getSaleById
-);
-
-// Get sales by customer
-router.get(
-  "/my-orders",
-  authenticate,
-  authorize(["Customer"]),
-  getMyOrders
 );
 
 router.get(

@@ -43,7 +43,7 @@ const roleNavItems = {
     { title: 'Overview', url: '/dashboard/admin', icon: LayoutDashboard },
     { title: 'User Management', url: '/users', icon: Users },
     { title: 'Audit Logs', url: '/admin/audit', icon: FileText },
-    { title: 'System Settings', url: '/settings', icon: Settings },
+    // { title: 'System Settings', url: '/settings', icon: Settings },
   ],
   Manager: [
     { title: 'Overview', url: '/dashboard/manager', icon: LayoutDashboard },

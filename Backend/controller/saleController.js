@@ -230,6 +230,7 @@ export const getSalesReport = async (req, res, next) => {
     const booksSold = {};
     sales.forEach((sale) => {
       sale.items.forEach((item) => {
+        if (!item.bookId) return; // book was deleted, skip gracefully
         const bookTitle = item.bookId.title;
         booksSold[bookTitle] = (booksSold[bookTitle] || 0) + item.quantity;
       });

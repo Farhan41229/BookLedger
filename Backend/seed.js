@@ -83,7 +83,7 @@ const sampleUsers = [
   {
     name: 'Admin User',
     email: 'admin@example.com',
-    password: 'admin123', // Will be hashed
+    password: 'admin123',
     role: 'Admin',
     isEmailVerified: true,
   },

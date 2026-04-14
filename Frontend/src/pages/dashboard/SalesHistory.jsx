@@ -12,9 +12,7 @@ const SalesHistory = () => {
   useEffect(() => {
     const fetchSales = async () => {
       try {
-        // Attempt to fetch sales. 
-        // Note: Backend might restrict this for Cashiers.
-        const res = await API.get("/sales"); 
+        const res = await API.get("/sales/my-orders");
         setSales(res.data.sales || []);
       } catch (err) {
         setError("Unable to load sales history. You may not have permission to view this data.");
