@@ -20,8 +20,9 @@ export const generateAIText = async (prompt, maxRetries = 3) => {
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
+      const modelName = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
       const model = genAI.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: modelName,
       });
 
       const result = await model.generateContent(prompt);
@@ -81,8 +82,9 @@ export const generateAITextWithImage = async (
 ) => {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
+      const modelName = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
       const model = genAI.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: modelName,
       });
 
       const result = await model.generateContent([

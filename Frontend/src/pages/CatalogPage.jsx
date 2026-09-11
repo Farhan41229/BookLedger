@@ -10,6 +10,8 @@ import {
   Clock,
   Compass,
   Eye,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +24,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import toast from 'react-hot-toast';
 import API from '@/lib/axios';
 import useCartStore from '@/store/cartStore';
@@ -53,6 +62,8 @@ const CatalogPage = () => {
   const [loadingBooks, setLoadingBooks] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   // Preview Modal State
   const [previewBook, setPreviewBook] = useState(null);
@@ -89,7 +100,7 @@ const CatalogPage = () => {
       const fetchBooks = async () => {
         setLoadingBooks(true);
         try {
-          const res = await API.get('/books');
+          const res = await API.get('/books?limit=100');
           setBooks(res.data.books || []);
         } catch (error) {
           console.log(error);
@@ -163,6 +174,12 @@ const CatalogPage = () => {
     const matchesGenre = selectedGenre === 'All' || b.genre === selectedGenre;
     return matchesSearch && matchesGenre;
   });
+
+  const totalPages = Math.ceil(filteredBooks.length / pageSize) || 1;
+  const paginatedBooks = filteredBooks.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -471,30 +488,40 @@ const CatalogPage = () => {
                 </p>
               </div>
 
-              {/* Filters and Search */}
-              <div className="flex flex-col md:flex-row gap-4 justify-between items-center mb-10">
-                <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-hide">
-                  {genres.map((genre) => (
-                    <Button
-                      key={genre}
-                      variant={selectedGenre === genre ? 'default' : 'outline'}
-                      size="sm"
-                      className="rounded-full whitespace-nowrap"
-                      onClick={() => setSelectedGenre(genre)}
-                    >
-                      {genre}
-                    </Button>
-                  ))}
+              {/* Filters and Search Bar */}
+              <div className="flex flex-col sm:flex-row gap-3 justify-between items-center mb-10 bg-card/60 border border-border/50 p-2.5 rounded-2xl shadow-sm backdrop-blur-sm">
+                <div className="relative w-full sm:flex-1">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by title, author, or keyword..."
+                    className="pl-10 h-10 bg-background/80 border-transparent focus-visible:border-border rounded-xl text-sm"
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                  />
                 </div>
 
-                <div className="relative w-full md:w-72 mt-2 md:mt-0">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search title or author..."
-                    className="pl-9 bg-card shadow-sm rounded-full"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
+                <div className="w-full sm:w-56 shrink-0">
+                  <Select
+                    value={selectedGenre}
+                    onValueChange={(val) => {
+                      setSelectedGenre(val);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="h-10 w-full rounded-xl bg-background/80 border-transparent focus:border-border text-sm">
+                      <SelectValue placeholder="All Genres" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {genres.map((genre) => (
+                        <SelectItem key={genre} value={genre}>
+                          {genre === 'All' ? 'All Genres' : genre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -520,60 +547,132 @@ const CatalogPage = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {filteredBooks.map((book) => (
-                    <Link to={`/books/${book._id}`} key={book._id}>
-                      <div>
-                        <Card className="h-full overflow-hidden border-transparent hover:border-border/50 bg-card/40 hover:bg-card hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group">
-                          <div className="aspect-[2/3] w-full overflow-hidden bg-muted relative">
-                            {book.coverImage ? (
-                              <img
-                                src={book.coverImage}
-                                alt={book.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/40 space-y-2">
-                                <BookIcon className="h-12 w-12" />
-                              </div>
-                            )}
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                    {paginatedBooks.map((book) => (
+                      <Link to={`/books/${book._id}`} key={book._id}>
+                        <div>
+                          <Card className="h-full overflow-hidden border-transparent hover:border-border/50 bg-card/40 hover:bg-card hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group">
+                            <div className="aspect-[2/3] w-full overflow-hidden bg-muted relative">
+                              {book.coverImage ? (
+                                <img
+                                  src={book.coverImage}
+                                  alt={book.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/40 space-y-2">
+                                  <BookIcon className="h-12 w-12" />
+                                </div>
+                              )}
 
-                            {book.stockQuantity <= 0 && (
-                              <div className="absolute inset-x-0 bottom-0 bg-red-500/90 text-white text-xs text-center py-1 font-semibold backdrop-blur-sm">
-                                OUT OF STOCK
-                              </div>
-                            )}
-                          </div>
-
-                          <CardContent className="p-4 space-y-2">
-                            <div className="flex justify-between items-start gap-2">
-                              <h3 className="font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2">
-                                {book.title}
-                              </h3>
-                            </div>
-                            <p className="text-xs text-muted-foreground font-medium line-clamp-1">
-                              {book.author}
-                            </p>
-
-                            <div className="pt-2 flex items-center justify-between">
-                              <span className="font-bold text-lg">
-                                ${Number(book.price).toFixed(2)}
-                              </span>
-                              {book.genre && (
-                                <Badge
-                                  variant="secondary"
-                                  className="text-[10px] px-2 font-normal bg-secondary/50"
-                                >
-                                  {book.genre}
-                                </Badge>
+                              {book.stockQuantity <= 0 && (
+                                <div className="absolute inset-x-0 bottom-0 bg-red-500/90 text-white text-xs text-center py-1 font-semibold backdrop-blur-sm">
+                                  OUT OF STOCK
+                                </div>
                               )}
                             </div>
-                          </CardContent>
-                        </Card>
+
+                            <CardContent className="p-4 space-y-2">
+                              <div className="flex justify-between items-start gap-2">
+                                <h3 className="font-bold leading-tight group-hover:text-primary transition-colors line-clamp-2">
+                                  {book.title}
+                                </h3>
+                              </div>
+                              <p className="text-xs text-muted-foreground font-medium line-clamp-1">
+                                {book.author}
+                              </p>
+
+                              <div className="pt-2 flex items-center justify-between">
+                                <span className="font-bold text-lg">
+                                  ${Number(book.price).toFixed(2)}
+                                </span>
+                                {book.genre && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-[10px] px-2 font-normal bg-secondary/50"
+                                  >
+                                    {book.genre}
+                                  </Badge>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-12 pt-6 border-t border-border/50">
+                      <p className="text-sm text-muted-foreground">
+                        Showing{' '}
+                        <span className="font-medium text-foreground">
+                          {(currentPage - 1) * pageSize + 1}
+                        </span>{' '}
+                        to{' '}
+                        <span className="font-medium text-foreground">
+                          {Math.min(currentPage * pageSize, filteredBooks.length)}
+                        </span>{' '}
+                        of{' '}
+                        <span className="font-medium text-foreground">
+                          {filteredBooks.length}
+                        </span>{' '}
+                        books
+                      </p>
+
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setCurrentPage((prev) => Math.max(prev - 1, 1));
+                            window.scrollTo({ top: 300, behavior: 'smooth' });
+                          }}
+                          disabled={currentPage <= 1}
+                          className="rounded-full gap-1 px-3"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          <span>Previous</span>
+                        </Button>
+
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                            (pageNumber) => (
+                              <Button
+                                key={pageNumber}
+                                variant={currentPage === pageNumber ? 'default' : 'ghost'}
+                                size="sm"
+                                className="h-8 w-8 p-0 rounded-full text-xs font-semibold"
+                                onClick={() => {
+                                  setCurrentPage(pageNumber);
+                                  window.scrollTo({ top: 300, behavior: 'smooth' });
+                                }}
+                              >
+                                {pageNumber}
+                              </Button>
+                            )
+                          )}
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+                            window.scrollTo({ top: 300, behavior: 'smooth' });
+                          }}
+                          disabled={currentPage >= totalPages}
+                          className="rounded-full gap-1 px-3"
+                        >
+                          <span>Next</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
                       </div>
-                    </Link>
-                  ))}
-                </div>
+                    </div>
+                  )}
+                </>
               )}
             </motion.div>
           )}
